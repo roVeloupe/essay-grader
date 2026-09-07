@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高中作文AI批改系统 · 界面预览总览</title>
+<style>
+  :root{
+    --wx: #d6d8db; --on: #07c160; --bg:#f5f6f7; --line:#e0e0e0;
+    --blue:#07c160;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif}
+  body{background:#eceff1;padding:32px;color:#2b2b2b}
+  .page-head{max-width:1200px;margin:0 auto 24px}
+  .page-head h1{font-size:26px;margin-bottom:6px}
+  .page-head p{color:#666;font-size:14px}
+  .grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+  .card h2{font-size:17px;margin-bottom:4px}
+  .card .desc{font-size:13px;color:#888;margin-bottom:14px}
+  .card iframe{width:100%;height:420px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .full{grid-column:1 / -1}
+  .foot{max-width:1200px;margin:24px auto 0;color:#999;font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>📄 高中作文 AI 批改系统 · 界面预览总览</h1>
+    <p>仿微信电脑版三栏布局 · UI 技术栈 WinUI3 · 识别/校对/批阅引擎：StepFun step-3.7-flash（原生 base64 多模态）</p>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <h2>① 主界面（工作台）</h2>
+      <div class="desc">左侧功能导航 + 中间「按文件名排序的作文列表」+ 右侧识别/批阅内容区</div>
+      <iframe src="01_主界面.html" title="主界面"></iframe>
+    </div>
+    <div class="card">
+      <h2>② 识别与校对视图</h2>
+      <div class="desc">扫描原图 ↔ 识别文本对照，逐句比对、标红纠错、圈选原文复核</div>
+      <iframe src="02_识别校对.html" title="识别校对"></iframe>
+    </div>
+    <div class="card">
+      <h2>③ 批阅结果视图</h2>
+      <div class="desc">按批阅标准输出：分数、优点、缺点、修改建议、引用原文句</div>
+      <iframe src="03_批阅结果.html" title="批阅结果"></iframe>
+    </div>
+    <div class="card">
+      <h2>④ 批阅标准管理</h2>
+      <div class="desc">随时增删改标准模板：维度、分值、评语规则，一键套用</div>
+      <iframe src="04_标准管理.html" title="标准管理"></iframe>
+    </div>
+    <div class="card full">
+      <h2>⑤ 系统设置（StepFun 接入配置）</h2>
+      <div class="desc">配置 API Key、模型(step-3.7-flash)、Base URL、推理强度、批阅并发</div>
+      <iframe src="05_设置.html" title="设置" style="height:300px"></iframe>
+    </div>
+  </div>
+  <div class="foot">© 高中作文 AI 批改系统 · 开发文档配套界面预览</div>
+</body>
+</html>

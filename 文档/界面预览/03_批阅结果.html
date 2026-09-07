@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>批阅结果视图</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei","Segoe UI",sans-serif}
+  :root{--green:#07c160}
+  body{background:#d8dbdf;height:100vh;display:flex;align-items:center;justify-content:center}
+  .win{width:1180px;height:720px;background:#fff;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden}
+  .titlebar{height:36px;background:#f7f7f7;display:flex;align-items:center;padding-left:14px;gap:10px;border-bottom:1px solid #e0e0e0;flex:none}
+  .dots i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px}
+  .dots i:nth-child(1){background:#ff5f57}.dots i:nth-child(2){background:#febc2e}.dots i:nth-child(3){background:#28c840}
+  .titlebar .tt{font-size:13px;color:#666;flex:1}
+  .body{flex:1;display:flex;min-height:0}
+  /* 左侧总分卡片 */
+  .score-pane{width:300px;border-right:1px solid #e0e0e0;padding:20px;flex:none;display:flex;flex-direction:column;gap:14px;background:#fbfbfb}
+  .big-score{text-align:center;padding:6px}
+  .big-score .num{font-size:60px;color:var(--green);font-weight:800}
+  .big-score .den{color:#bbb;font-size:20px}
+  .big-score .lbl{color:#888;font-size:12px;margin-top:2px}
+  .std-card{border:1px solid #e0e0e0;border-radius:8px;padding:10px 12px;background:#fff}
+  .std-title{font-size:12px;color:#888;margin-bottom:8px;display:flex;justify-content:space-between}
+  .std-title b{color:#333}
+  .dim{display:flex;justify-content:space-between;font-size:13px;margin:6px 0}
+  .dim .dname{color:#444}
+  .dim .dscore{font-weight:600}
+  .bar{height:6px;background:#eee;border-radius:3px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--green)}
+  .rank{font-size:12px;color:#888;text-align:center;margin-top:auto;line-height:1.8}
+  /* 右侧结果 */
+  .res-pane{flex:1;display:flex;flex-direction:column;min-width:0}
+  .toolbar{height:44px;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;gap:8px;padding:0 14px}
+  .chip{font-size:12px;padding:4px 12px;border-radius:6px;background:#f2f2f2;color:#333;cursor:pointer}
+  .chip.on{background:var(--green);color:#fff}
+  .toolbar small{color:#999;font-size:12px}
+  .scroll{flex:1;overflow:auto;padding:18px 26px}
+  .block{border:1px solid #e6e6e6;border-radius:8px;padding:12px 16px;margin-bottom:14px}
+  .block h3{font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .block ul{list-style:none}
+  .block li{font-size:13px;line-height:1.8;color:#333;padding-left:16px;position:relative;margin:4px 0}
+  .block li::before{content:"·";position:absolute;left:2px;color:var(--green);font-weight:700}
+  .good h3{color:var(--green)}
+  .bad h3{color:#d13b2f}
+  .sug h3{color:#2f6bd8}
+  .quote{background:#f7f9fb;border-left:3px solid #c8d6f0;padding:6px 10px;font-size:12px;color:#666;border-radius:0 4px 4px 0;margin-top:4px}
+  .bottom{height:50px;border-top:1px solid #e0e0e0;display:flex;align-items:center;padding:0 16px;gap:10px}
+  .bottom .l{font-size:12px;color:#999}
+  .right{margin-left:auto;display:flex;gap:10px}
+  .btn2{font-size:13px;padding:5px 16px;border-radius:6px;border:1px solid #c6c6c6;background:#fff;color:#333;cursor:pointer}
+  .btn2.green{background:var(--green);border-color:var(--green);color:#fff}
+  .pdf{font-size:12px;color:#2f6bd8;cursor:pointer;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar"><div class="dots"><i></i><i></i><i></i></div><span class="tt">批阅结果 —— 2_李小雨_难忘的一天</span></div>
+  <div class="body">
+    <!-- 左侧总分 -->
+    <div class="score-pane">
+      <div class="big-score">
+        <div>52<span class="den">/ 60</span></div>
+        <div class="lbl">作文总分（高考卷面 · 含 3 分卷面分）</div>
+      </div>
+      <div class="std-card">
+        <div class="std-title"><span>📊 批阅标准</span><b>高考作文评分</b></div>
+        <div class="dim"><span class="dname">内容立意 (25)</span><span class="dscore">23</span></div>
+        <div class="bar"><i style="width:92%"></i></div>
+        <div class="dim"><span class="dname">语言表达 (20)</span><span class="dscore">17</span></div>
+        <div class="bar"><i style="width:85%"></i></div>
+        <div class="dim"><span class="dname">结构条理 (12)</span><span class="dscore">9</span></div>
+        <div class="bar"><i style="width:75%"></i></div>
+        <div class="dim"><span class="dname">卷面书写 (3)</span><span class="dscore">3</span></div>
+        <div class="bar"><i style="width:100%"></i></div>
+      </div>
+      <div class="rank">综合评价：<br>B⁻（良好偏上）<br><span style="color:#2f6bd8">接近一类文（54+）</span></div>
+    </div>
+    <!-- 右侧结果 -->
+    <div class="res-pane">
+      <div class="toolbar">
+        <span class="chip">总分</span><span class="chip">内容立意</span><span class="chip on">优点 👍</span><span class="chip on">缺点 👎</span><span class="chip already on">修改建议 ✏️</span>
+        <small>｜ 引擎：step-3.7-flash</small>
+        <div style="margin-left:auto;font-size:12px;color:#999">批阅时间：2026-09-07 10:24</div>
+      </div>
+      <div class="scroll">
+        <div class="block good">
+          <h3>✅ 优点（符合标准要求，已引用原文）</h3>
+          <ul>
+            <li>立意积极向上，紧扣「难忘」展开，情感真挚。</li>
+            <li>开头巧用排比与设问，<b>「那一天，是我第一次真正读懂了母亲」</b>一句有感染力。</li>
+            <li>结尾回扣标题，结构完整。</li>
+          </ul>
+        </div>
+        <div class="block bad">
+          <h3>⚠️ 缺点（按评分维度指出失分点）</h3>
+          <ul>
+            <li>内容立意：第二、三段例证较单薄，仅叙述事件，缺少升华（失 2 分）。</li>
+            <li>语言表达：个别语句口语化，如「这事吧，其实挺简单的」，与书面语风格不符（失 2 分）。</li>
+            <li>结构条理：过渡句衔接略生硬，「后来」「于是」重复使用（失 1 分）。</li>
+          </ul>
+        </div>
+        <div class="block sug">
+          <h3>✏️ 修改建议（在不改变原意前提下润色）</h3>
+          <ul>
+            <li>把「这事吧，其实挺简单的」改为「此事看似平常，实则意义非凡」。</li>
+            <li>在第二段末尾补充一句心理描写作升华，增强立意深度。</li>
+            <li>精简「后来」「于是」等重复连接词，改用「然而」「如此」过渡。</li>
+          </ul>
+        </div>
+        <div>
+          <span class="pdf">📄 导出批阅报告(PDF)</span>
+          <span class="pdf" style="margin-left:14px">📄 按文件名顺序合并导出为 Word</span>
+        </div>
+      </div>
+      <div class="bottom">
+        <span class="l">输出将按图片文件名排序（1 → 5）</span>
+        <div class="right">
+          <span class="btn2">⬅ 上一篇</span>
+          <span class="btn2 green">保存结果</span>
+          <span class="btn2 green">下一篇 ➡</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高中作文 AI 批改系统 · 仿微信电脑版</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="win">
+  <!-- 标题栏 -->
+  <div class="titlebar">
+    <div class="dots"><i></i><i></i><i></i></div>
+    <span class="tt">高中作文 AI 批改系统</span>
+    <span class="conn" id="connTag"><span class="dot"></span>连接检测中…</span>
+  </div>
+
+  <div class="body">
+    <!-- 左侧导航（仿微信：头像 + 图标栏） -->
+    <div class="nav">
+      <div class="avatar-btn" id="btnSettings" title="设置/个人信息">
+        <div class="avatar-bg" id="avatarBg">批</div>
+      </div>
+      <div class="nav-item active" data-nav="grade" title="作文批阅">
+        <span class="ic">✎</span><span>批阅</span>
+      </div>
+      <div class="nav-item" data-nav="templates" title="批阅标准">
+        <span class="ic">▤</span><span>标准</span>
+      </div>
+      <div class="nav-item" data-nav="records" title="批阅记录">
+        <span class="ic">🗂</span><span>记录</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="nav-item" data-nav="engine" title="StepFun 引擎">
+        <span class="ic">◆</span><span>引擎</span>
+      </div>
+      <div class="nav-item" data-nav="settings" title="设置">
+        <span class="ic">⚙</span><span>设置</span>
+      </div>
+    </div>
+
+    <!-- 中间列：列表 -->
+    <div class="mid">
+      <div class="mid-head">
+        <span class="mid-title" id="midTitle">作文批阅</span>
+        <span class="mid-count" id="midCount"></span>
+      </div>
+      <div class="search"><input id="searchInput" placeholder="搜索文件名 / 学生姓名"><span class="si">⌕</span></div>
+
+      <div class="list-scroll" id="listRoot"><div class="empty">暂无数据</div></div>
+
+      <div class="mid-foot" id="midFoot">
+        <span class="mbtn" id="btnImport">＋ 导入图片</span>
+        <input type="file" id="importInput" multiple accept="image/*" hidden>
+        <span class="mbtn" id="btnBatch">⏩ 全部批阅</span>
+      </div>
+    </div>
+
+    <!-- 右侧内容区 -->
+    <div class="main">
+      <!-- 工作台视图（批阅） -->
+      <div id="view-grade" class="view-area"></div>
+      <!-- 标准管理视图 -->
+      <div id="view-templates" class="view-area" style="display:none">
+        <div class="tpl-manage">
+          <div class="tpl-head">
+            <h3>批阅标准（模板）</h3>
+            <button class="btn2 green" id="btnAddTpl">＋ 新建标准</button>
+          </div>
+          <div id="tplList" class="tpl-list"></div>
+        </div>
+      </div>
+      <!-- 记录视图 -->
+      <div id="view-records" class="view-area" style="display:none">
+        <div class="tpl-manage">
+          <div class="tpl-head"><h3>批阅记录（按文件名顺序）</h3></div>
+          <div id="recordsList" class="tpl-list"></div>
+        </div>
+      </div>
+      <!-- 设置视图 -->
+      <div id="view-settings" class="view-area" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 模板编辑弹窗 -->
+<div class="modal-mask" id="tplModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head">
+      <span id="tplModalTitle">新建标准</span>
+      <button class="x" data-close="tplModal">✕</button>
+    </div>
+    <div class="modal-body" id="tplModalBody"></div>
+    <div class="modal-foot">
+      <button class="btn2" data-close="tplModal">取消</button>
+      <button class="btn2 green" id="btnSaveTpl">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 设置弹窗 -->
+<div class="modal-mask" id="settingsModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head"><span>系统设置</span><button class="x" data-close="settingsModal">✕</button></div>
+    <div class="modal-body" id="settingsBody"></div>
+    <div class="modal-foot">
+      <button class="btn2" data-close="settingsModal">取消</button>
+      <button class="btn2" id="btnTestConn">测试连接</button>
+      <button class="btn2 green" id="btnSaveSettings">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="js/app.js"></script>
+</body>
+</html>

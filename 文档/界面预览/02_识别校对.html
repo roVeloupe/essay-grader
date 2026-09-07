@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>识别与校对视图</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei","Segoe UI",sans-serif}
+  :root{--green:#07c160;--warn:#ff8f1f;--err:#e6433f}
+  body{background:#d8dbdf;height:100vh;display:flex;align-items:center;justify-content:center}
+  .win{width:1180px;height:720px;background:#fff;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden}
+  .titlebar{height:36px;background:#f7f7f7;display:flex;align-items:center;padding-left:14px;gap:10px;border-bottom:1px solid #e0e0e0;flex:none}
+  .dots i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px}
+  .dots i:nth-child(1){background:#ff5f57}.dots i:nth-child(2){background:#febc2e}.dots i:nth-child(3){background:#28c840}
+  .titlebar .tt{font-size:13px;color:#666;flex:1}
+  .toolbar{height:44px;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;gap:8px;padding:0 14px}
+  .chip{font-size:12px;padding:4px 12px;border-radius:6px;background:#f2f2f2;color:#333;cursor:pointer}
+  .chip.on{background:var(--green);color:#fff}
+  .toolbar .right{margin-left:auto}
+  .st{font-size:12px;color:#999}
+  .st.on{color:var(--green);font-weight:600}
+  .body{flex:1;display:flex;min-height:0}
+  /* 左：原图 */
+  .img-pane{width:46%;border-right:1px solid #e0e0e0;display:flex;flex-direction:column}
+  .pane-h{height:40px;display:flex;align-items:center;padding:0 14px;font-size:13px;font-weight:600;background:#fafafa;border-bottom:1px solid #eee}
+  .pane-h small{font-weight:400;color:#999;margin-left:8px}
+  .img-box{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:12px;background:#f0f0f0}
+  .paper{width:340px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.1);padding:26px 22px;position:relative}
+  /* 扫描纸：模拟手写稿格子 */
+  .line-lb{text-align:center;font-size:14px;color:#444;margin-bottom:8px;letter-spacing:4px}
+  .line{font-family:"KaiTi","STKaiti",serif;color:#333;line-height:1.4;margin:3px 0;white-space:pre-wrap}
+  .line.hl{background:#fff3cd;border-radius:3px}
+  /* 对比气泡 */
+  .cmp{position:absolute;background:#fff;border:1px solid var(--err);border-radius:6px;padding:6px 8px;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,.15);width:170px;z-index:5}
+  .cmp b{color:var(--err)}
+  .cmp .r{color:var(--green)}
+  /* 右：识别文本 */
+  .txt-pane{flex:1;display:flex;flex-direction:column;min-width:0}
+  .rec{flex:1;overflow:auto;padding:18px 24px}
+  .rec-title{font-size:15px;color:#111;font-weight:600;padding-bottom:6px;border-bottom:2px solid var(--green);margin-bottom:14px}
+  ol.par{list-style:none}
+  .sentence{font-size:15px;line-height:1.9;color:#2b2b2b;text-align:justify;margin-bottom:8px}
+  .err{background:#ffe2e1;border-radius:3px;padding:0 2px;color:var(--err);cursor:pointer;border-bottom:1px dashed var(--err)}
+  .warn{background:#fff3cd;border-radius:3px;padding:0 2px;color:#c78a00;cursor:pointer;border-bottom:1px dashed #c78a00}
+  .fix{color:var(--green);font-size:12px;margin-left:6px;background:#e6f7ed;border-radius:3px;padding:0 4px}
+  .panel{border-top:1px solid #e0e0e0}
+  .pending{display:flex;gap:10px;align-items:flex-start;padding:10px 20px;background:#fffaf0;border-bottom:1px solid #f2e5c8}
+  .pending .tagx{background:var(--warn);color:#fff;border-radius:4px;font-size:11px;padding:2px 7px;flex:none;margin-top:2px}
+  .pending .info{flex:1;font-size:13px;color:#333}
+  .pending .info b{color:var(--warn)}
+  .pending .btns a{font-size:12px;color:var(--green);cursor:pointer;margin-right:12px;text-decoration:none;border:1px solid var(--green);border-radius:4px;padding:2px 8px}
+  .btn2{font-size:13px;padding:5px 16px;border-radius:6px;border:1px solid #c6c6c6;background:#fff;color:#333;cursor:pointer;margin-left:10px}
+  .btn2.green{background:var(--green);border-color:var(--green);color:#fff}
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar"><div class="dots"><i></i><i></i><i></i></div><span class="tt">识别与校对 —— 3_张子涵_我的老师</span></div>
+  <div class="toolbar">
+    <span class="chip on">📷 原图对照</span>
+    <span class="chip">📄 识别结果</span>
+    <span class="chip">✔ 校对结果</span>
+    <span class="st" style="margin-left:14px">识别置信度：<b>96.4%</b></span>
+    <div class="right">
+      <span style="font-size:12px;color:#999">引擎：</span><span class="chip on" style="background:#eaf2ff;color:#2f6bd8">step-3.7-flash（原生 base64）</span>
+      <span class="btn2 green">确认无误 → 进入批阅</span>
+    </div>
+  </div>
+  <div class="body">
+    <!-- 左：原图 -->
+    <div class="img-pane">
+      <div class="pane-h">扫描原图（第 1 张）<small>点击识别的黄色/红色框，可框选原图区域复核</small></div>
+      <div class="img-box">
+        <div class="paper">
+          <div class="line-lb">我的老师</div>
+          <div class="line">今天，老师给我们讲了一个有趣的故事，</div>
+          <div class="line">大家都听得入神。下课后却见老师抱着一</div>
+          <div class="line">本厚厚的数学题在这小子的工位上，日夜不</div>
+          <div class="line hl">再次。我这才明白，原来在抄题的人是多么</div>
+          <div class="line">认真——他就是我们身边最常见的良师。</div>
+          <div class="cmp" style="top:210px;left:18px">
+            比对：<br>原文 <b>「息」</b><br>识别 <b>「习（再次）」</b><br><span class="r">已修正 ✓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 右：识别文本 -->
+    <div class="txt-pane">
+      <div class="rec">
+        <div class="rec-title">识别 + 纠错 + 校对（原文对照复核后）</div>
+        <p style="font-size:14px;color:#111;font-weight:600;margin-bottom:4px">标题：我的老师 ✓</p>
+        <p style="font-size:13px;color:#888;margin-bottom:12px">作者：张子涵 ✓（已与原文比对确认）</p>
+        <ol class="par">
+          <li class="sentence">今天，老师给学生讲述了一个有趣的故事，大家都听得入神。</li>
+          <li class="sentence">下课后却见老师抱着厚厚的一本数学题在看，<span class="err">日<br>夜</span><span class="fix">⌘ 修正：昼夜</span> <span class="warn">这</span>在小子的工位上伫立，从不懈怠。</li>
+          <li class="sentence">我这才明白，原来<span class="warn">再</span><span class="fix">⌘ 待确认</span>人不一定都要高高在上，认真地默默付出，就是最好的师者模样。</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <!-- 底部待处理清单 -->
+  <div class="panel">
+    <div class="pending">
+      <span class="tagx">待复核</span>
+      <div class="info"><b>第②句</b>：识别为「日夜不习」，与原图比对判定应修正为 <b>「昼夜不辍」</b>，已按原意自动改通。—— <a>查看原图区域</a><a>接受</a><a>忽略</a></div>
+    </div>
+    <div class="pending">
+      <span class="tagx">待确认</span>
+      <div class="info"><b>第③句</b>：疑似原文字迹潦草，语义不完全通顺，建议修改为「认真的人在用心付出」不改变原意，请确认。—— <a>接受修改</a><a>跳过</a></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

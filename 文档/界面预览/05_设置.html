@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>系统设置 · StepFun 接入配置</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei","Segoe UI",sans-serif}
+  :root{--green:#07c160}
+  body{background:#d8dbdf;height:100vh;display:flex;align-items:center;justify-content:center}
+  .win{width:720px;background:#fff;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden;max-height:640px}
+  .titlebar{height:36px;background:#f7f7f7;display:flex;align-items:center;padding-left:14px;gap:10px;border-bottom:1px solid #e0e0e0;flex:none}
+  .dots i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px}
+  .dots i:nth-child(1){background:#ff5f57}.dots i:nth-child(2){background:#febc2e}.dots i:nth-child(3){background:#28c840}
+  .titlebar .tt{font-size:13px;color:#666;flex:1}
+  .body{padding:20px 28px;overflow:auto}
+  .group-title{font-size:13px;color:#888;margin:16px 0 8px;border-left:3px solid var(--green);padding-left:8px;font-weight:600}
+  .row{display:flex;align-items:center;gap:12px;margin:10px 0}
+  .row label{width:140px;font-size:13px;color:#333;flex:none}
+  .row input,.row select{flex:1;height:32px;border:1px solid #d8d8d8;border-radius:6px;padding:0 10px;font-size:13px}
+  .row .sec{font-size:12px;color:#999;flex:none}
+  .status{display:flex;align-items:center;gap:8px;font-size:13px}
+  .dot-g{width:10px;height:10px;border-radius:50%;background:var(--green)}
+  .hint{font-size:12px;color:#888;background:#f7f9fb;border-radius:6px;padding:8px 12px;line-height:1.8;margin-top:14px}
+  .footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 28px;border-top:1px solid #eee}
+  .btn2{font-size:13px;padding:6px 18px;border-radius:6px;border:1px solid #c6c6c6;background:#fff;color:#333;cursor:pointer}
+  .btn2.green{background:var(--green);border-color:var(--green);color:#fff}
+  .box{display:flex;gap:8px;}
+  .box .on{background:#e6f7ed;color:var(--green);border:1px solid var(--green)}
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar"><div class="dots"><i></i><i></i><i></i></div><span class="tt">系统设置</span></div>
+  <div class="body">
+    <div class="group-title">🧠 StepFun（阶跃星辰）接入</div>
+    <div class="row"><label>API Base URL</label><input value="https://api.stepfun.com/v1"><span class="sec">OpenAI 兼容</span></div>
+    <div class="row"><label>API Key</label><input type="password" value="sk-step-********************"><span class="sec"><a style="color:#2f6bd8;cursor:pointer">去开放平台获取</a></span></div>
+    <div class="row"><label>模型</label>
+      <select><option>step-3.7-flash（多模态· 图像原生 base64 识别）</option></select>
+    </div>
+    <div class="row"><label>推理强度 reasoning</label>
+      <div class="box">
+        <span class="chip2 on" style="border:1px solid var(--green);color:var(--green);background:#e6f7ed;padding:3px 12px;border-radius:6px;font-size:12px">high（校对最稳 · 推荐）</span>
+        <span style="padding:3px 12px;border-radius:6px;font-size:12px;border:1px solid #ccc;">medium</span>
+        <span style="padding:3px 12px;border-radius:6px;font-size:12px;border:1px solid #ccc;">low</span>
+      </div>
+    </div>
+    <div class="row"><label>识别-校对比对粒度</label>
+      <select><option>逐句（推荐）</option><option>逐段</option><option>整篇一次比对</option></select>
+    </div>
+
+    <div class="group-title">⚙️ 批阅与输出</div>
+    <div class="row"><label>默认批阅标准</label><select><option>高考作文评分（60 分）</option></select></div>
+    <div class="row"><label>批阅并发数</label><input value="2"><span class="sec">同时批阅篇数</span></div>
+    <div class="row"><label>输出顺序</label>
+      <select><option>按图片文件名升序（推荐）</option><option>按标题首字母</option><option>按批阅时间</option></select>
+    </div>
+    <div class="row"><label>导出格式</label>
+      <div class="box">
+        <span style="padding:3px 12px;border-radius:6px;font-size:12px;border:1px solid #ccc;">Word / PDF / Markdown</span>
+        <span style="padding:3px 12px;border-radius:6px;font-size:12px;border:1px solid var(--green);color:var(--green)">合并为一个文档 ✓</span>
+      </div>
+    </div>
+
+    <div class="group-title">📁 保存位置（可自定义）</div>
+    <div class="row"><label>批阅结果目录</label>
+      <input value="D:\教案\作文批改\结果"><span class="sec"><a style="color:#2f6bd8;cursor:pointer">浏览… </a></span>
+    </div>
+    <div class="row"><label>导出文档目录</label>
+      <input value="D:\教案\作文批改\导出"><span class="sec"><a style="color:#2f6bd8;cursor:pointer">浏览… </a></span>
+    </div>
+    <div class="row"><label>保存模式</label>
+      <div class="box">
+        <span style="padding:3px 12px;border-radius:6px;font-size:12px;border:1px solid var(--green);color:var(--green);background:#e6f7ed">始终保存到默认目录 ✓</span>
+        <span style="padding:3px 12px;border-radius:6px;font-size:12px;border:1px solid #ccc;">每次导出时询问位置</span>
+      </div>
+    </div>
+    <div class="row" style="margin-left:152px;color:#999;font-size:12px">目录不存在时自动创建；导出按批次建子目录：<span style="font-family:consolas">批次_yyyyMMdd_HHmmss</span></div>
+
+    <div class="status"><span class="dot-g"></span><b style="font-size:13px">StepFun 服务已连接</b><span style="font-size:12px;color:#999">（模型可用 · 额度正常</span>）</div>
+
+    <div class="hint">📌 图片识别不依赖本地 OCR 引擎：程序将扫描图片压缩并<b>转 base64</b>，随提示词一并提交给 <b>step-3.7-flash</b> 多模态模型，由其原生完成「标题 / 正文 / 姓名」识别，并在同一次请求中返回逐句置信度，供后续与原文框选复核。</div>
+  </div>
+  <div class="footer">
+    <span class="btn2">恢复默认</span>
+    <span class="btn2">测试连接</span>
+    <span class="btn2 green">保存设置</span>
+  </div>
+</div>
+</body>
+</html>

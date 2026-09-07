@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>批阅标准管理</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei","Segoe UI",sans-serif}
+  :root{--green:#07c160}
+  body{background:#d8dbdf;height:100vh;display:flex;align-items:center;justify-content:center}
+  .win{width:1180px;height:720px;background:#fff;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden}
+  .titlebar{height:36px;background:#f7f7f7;display:flex;align-items:center;padding-left:14px;gap:10px;border-bottom:1px solid #e0e0e0;flex:none}
+  .dots i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px}
+  .dots i:nth-child(1){background:#ff5f57}.dots i:nth-child(2){background:#febc2e}.dots i:nth-child(3){background:#28c840}
+  .titlebar .tt{font-size:13px;color:#666;flex:1}
+  .body{flex:1;display:flex;min-height:0}
+  .left{width:250px;border-right:1px solid #e0e0e0;flex:none;background:#fafafa;display:flex;flex-direction:column}
+  .left-head{padding:14px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+  .lt-item{padding:11px 16px;cursor:pointer;font-size:13px;border-left:3px solid transparent}
+  .lt-item.on{background:#fff;border-left-color:var(--green);font-weight:600;color:var(--green)}
+  .lt-item .t{font-size:11px;color:#999;margin-top:2px}
+  .right{flex:1;display:flex;flex-direction:column;min-width:0;padding:18px 24px;overflow:auto}
+  .rt-head{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .rt-head input{flex:1;font-size:15px;font-weight:600;border:none;border-bottom:1px solid #ccc;padding:4px 2px}
+  .add{font-size:12px;padding:4px 12px;border:1px dashed #999;border-radius:6px;color:#666;cursor:pointer;background:#fff}
+  .dim-row{border:1px solid #e6e6e6;border-radius:8px;padding:12px 16px;margin-bottom:12px;background:#fff}
+  .dim-top{display:flex;align-items:center;gap:10px}
+  .dim-top .name{font-weight:600;font-size:14px}
+  .dim-top input.w{width:70px;font-size:13px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;text-align:center}
+  .dim-top .del{margin-left:auto;color:#d13b2f;font-size:12px;cursor:pointer}
+  .rule{margin-top:10px}
+  .rule label{font-size:12px;color:#888;display:block;margin-bottom:4px}
+  .rule textarea{width:100%;height:54px;border:1px solid #e0e0e0;border-radius:6px;padding:8px;font-size:12px;color:#444;resize:none;line-height:1.6}
+  .rule .quick{font-size:11px;color:#2f6bd8}
+  .footer{display:flex;gap:10px;margin-top:6px;align-items:center}
+  .activate{margin-left:auto}
+  .btn2{font-size:13px;padding:5px 16px;border-radius:6px;border:1px solid #c6c6c6;background:#fff;color:#333;cursor:pointer}
+  .btn2.green{background:var(--green);border-color:var(--green);color:#fff}
+  .hint{font-size:12px;color:#888;background:#f7f9fb;border-radius:6px;padding:8px 12px;margin-bottom:16px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar"><div class="dots"><i></i><i></i><i></i></div><span class="tt">批阅标准管理 —— 模板可随时新增 / 修改 / 删除</span></div>
+  <div class="body">
+    <div class="left">
+      <div class="left-head">📚 标准模板 <span class="add">+ 新建</span></div>
+      <div class="lt-item on">高考作文评分 <span class="t">60 分 · 默认套用</span></div>
+      <div class="lt-item">中考作文评分 <span class="t">50 分 · 含卷面</span></div>
+      <div class="lt-item">平时周考标准 <span class="t">45 分 · 无卷面</span></div>
+      <div class="lt-item">议论文专项 <span class="t">基于高考、侧重论证</span></div>
+      <div class="lt-item">记叙文专项 <span class="t">基于高考、侧重文采</span></div>
+    </div>
+    <div class="right">
+      <div class="rt-head">
+        <input value="高考作文评分 60分">
+        <span class="add">重命名</span>
+        <span class="add">复制模板</span>
+        <span class="add">删除模板</span>
+      </div>
+      <div class="hint">💡 每个维度可配置<b>名称、满分数值</b>和<b>评分规则（写清给分要点），</b>批阅时引擎将按此规则逐项评分并汇总。右下角可<b>设为默认套用</b>标准。</div>
+      <div class="dim-row">
+        <div class="dim-top">
+          <span class="name">内容立意</span>
+          <span>满分</span><input class="w" value="25">
+          <span class="del">✕ 删除</span>
+        </div>
+        <div class="rule">
+          <label>评分规则（提示词片段）：</label>
+          <textarea>围绕标题与中心论点展开；素材真实典型、有细节；主题思想积极、有深度升华。偏离话题或立意平庸适当扣分。</textarea>
+        </div>
+      </div>
+      <div class="dim-row">
+        <div class="dim-top">
+          <span class="name">语言表达</span>
+          <span>满分</span><input class="w" value="20">
+          <span class="del">✕ 删除</span>
+        </div>
+        <div class="rule">
+          <label>评分规则：</label>
+          <textarea>语句通顺、用词准确、善用修辞（比喻/排比/拟人）；过度口语化、病句、错别字适当扣分。</textarea>
+        </div>
+      </div>
+      <div class="dim-row">
+        <div class="dim-top">
+          <span class="name">结构条理</span>
+          <span>满分</span><input class="w" value="12">
+          <span class="del">✕ 删除</span>
+        </div>
+        <div class="rule">
+          <label>评分规则：</label>
+          <textarea>开头引入、主体展开、结尾收束完整；过渡自然、层次清晰；详略得当。</textarea>
+        </div>
+      </div>
+      <div class="dim-row">
+        <div class="dim-top">
+          <span class="name">卷面书写</span>
+          <span>满分</span><input class="w" value="3">
+          <span class="del">✕ 删除</span>
+        </div>
+        <div class="rule">
+          <label>评分规则：</label>
+          <textarea>卷面整洁、字迹工整、无大范围涂改（依据原图自动评估）。</textarea>
+        </div>
+      </div>
+      <div class="footer">
+        <span class="add">+ 添加评分维度</span>
+        <span style="font-size:12px;color:#999">当前维度合计：<b>60</b> 分</span>
+        <span class="btn2 activate green">设为默认套用 ✓</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

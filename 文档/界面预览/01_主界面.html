@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>主界面 · 仿微信电脑版三栏工作台</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei","Segoe UI",sans-serif}
+  :root{--nav:#2e2e2e;--list-bg:#ececec;--hover:#dcdcdc;--active:#c8c8c8;--green:#07c160}
+  body{background:#d8dbdf;height:100vh;display:flex;align-items:center;justify-content:center}
+  .win{width:1180px;height:720px;background:#fff;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden}
+  /* 标题栏 */
+  .titlebar{height:36px;background:#f7f7f7;display:flex;align-items:center;padding-left:14px;gap:10px;border-bottom:1px solid #e0e0e0;flex:none}
+  .titlebar .dots{display:flex;gap:6px}
+  .titlebar .dots i{width:12px;height:12px;border-radius:50%;display:block}
+  .titlebar .dots i:nth-child(1){background:#ff5f57}.titlebar .dots i:nth-child(2){background:#febc2e}.titlebar .dots i:nth-child(3){background:#28c840}
+  .titlebar .tt{font-size:13px;color:#666;flex:1}
+  .titlebar .searchmini{font-size:12px;color:#999;margin-right:12px}
+  .body{flex:1;display:flex;min-height:0}
+  /* 左导航 */
+  .nav{width:64px;background:var(--nav);display:flex;flex-direction:column;align-items:center;padding-top:16px;gap:8px;flex:none}
+  .nav .item{width:44px;height:42px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#b9bcc2;font-size:10px;cursor:pointer}
+  .nav .item.active{background:var(--green);color:#fff}
+  .nav .item .ic{font-size:20px;line-height:1}
+  .nav .spacer{flex:1}
+  .nav .item.settings{color:#7c8087}
+  .sep{width:1px;background:#fff}
+  /* 中间列表 */
+  .mid{width:296px;flex:none;background:var(--list-bg);display:flex;flex-direction:column;min-height:0}
+  .mid .search{display:flex;align-items:center;gap:8px;padding:10px 14px;position:relative}
+  .mid .search input{flex:1;height:30px;border:none;background:#fff;border-radius:4px;padding:0 28px 0 10px;font-size:13px}
+  .mid .search .icon{position:absolute;right:24px;color:#888;font-size:13px}
+  .mid .tools{display:flex;gap:8px;padding:0 14px 8px;align-items:center}
+  .mid .tools .btn{font-size:12px;padding:3px 9px;border-radius:4px;border:1px solid #c0c0c0;background:#fff;color:#333;cursor:pointer}
+  .mid .tools .btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+  .essay-list{flex:1;overflow:auto}
+  .essay-item{display:flex;gap:10px;padding:11px 14px;cursor:pointer;align-items:center}
+  .essay-item.active,.essay-item:hover{background:var(--active)}
+  .avatar{width:40px;height:40px;border-radius:4px;flex:none;font-size:18px;display:flex;align-items:center;justify-content:center;color:#fff}
+  .ei-info{flex:1;min-width:0}
+  .ei-top{display:flex;justify-content:space-between;align-items:center}
+  .ei-name{font-size:14px;color:#1a1a1a;font-weight:600}
+  .ei-num{font-size:11px;color:#bbb}
+  .ei-msg{font-size:12px;color:#777;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .badge{font-size:10px;padding:1px 6px;border-radius:3px;flex:none}
+  .badge.done{background:#e6f7ed;color:var(--green)}
+  .badge.wait{background:#fff3d6;color:#c78a00}
+  .badge.grade{background:#eaf2ff;color:#2f6bd8}
+  .badge.proc{background:#ffe9e6;color:#d13b2f}
+  /* 右侧 */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+  .m-head{height:56px;border-bottom:1px solid #ecedee;display:flex;align-items:center;padding:0 18px;gap:10px}
+  .m-head h2{font-size:16px;color:#1a1a1a}
+  .m-head .sub{font-size:12px;color:#999}
+  .m-head .rh{margin-left:auto;display:flex;gap:8px}
+  .m-head .tag{font-size:12px;padding:4px 12px;border-radius:6px;background:#f2f2f2;color:#333;cursor:pointer}
+  .m-head .tag.on{background:var(--green);color:#fff}
+  .m-body{flex:1;display:flex;min-height:0}
+  .sheet{flex:1;display:none;flex-direction:column;padding:18px 24px;overflow:auto}
+  .sheet.on{display:flex}
+  .titleline{text-align:center}
+  .titleline .zhutitle{font-size:21px;font-weight:600;color:#111}
+  .titleline .meta{font-size:12px;color:#999;margin-top:6px}
+  .titleline .meta b{color:#333;font-weight:600;margin:0 4px}
+  .divider{height:40px;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:12px;letter-spacing:2px}
+  .divider::before,.divider::after{content:"";width:120px;height:1px;background:#e3e3e3;margin:0 12px}
+  .para{text-indent:2em;font-size:15px;line-height:1.9;color:#2b2b2b;text-align:justify}
+  .m-actions{height:54px;border-top:1px solid #ecedee;display:flex;align-items:center;padding:0 18px;gap:10px}
+  .m-actions .step{font-size:12px;color:#777}
+  .m-actions .step b{color:var(--green)}
+  .right-btns{margin-left:auto;display:flex;gap:10px}
+  .btn2{font-size:13px;padding:6px 18px;border-radius:6px;border:1px solid #c6c6c6;background:#fff;color:#333;cursor:pointer}
+  .btn2.green{background:var(--green);border-color:var(--green);color:#fff}
+  .btn2:disabled{opacity:.5;cursor:not-allowed}
+  .mt{color:#d13b2f;background:#ffe9e6;border-radius:4px;padding:0 6px;font-style:normal}
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar">
+    <div class="dots"><i></i><i></i><i></i></div>
+    <span class="tt">高中作文 AI 批改系统</span>
+    <span class="searchmini">🔍 全局搜索作文 / 学生 / 分数</span>
+  </div>
+  <div class="body">
+    <!-- 左侧导航 -->
+    <div class="nav">
+      <div class="item active"><span class="ic">📝</span>批阅</div>
+      <div class="item"><span class="ic">📊</span>标准</div>
+      <div class="item"><span class="ic">🗂️</span>记录</div>
+      <div class="item"><span class="ic">🧠</span>引擎</div>
+      <div class="spacer"></div>
+      <div class="item settings"><span class="ic">⚙️</span>设置</div>
+    </div>
+    <!-- 中间作文列表（按文件名排序） -->
+    <div class="mid">
+      <div class="search"><input placeholder="搜索文件名 / 学生姓名"><span class="icon">⌕</span></div>
+      <div class="tools">
+        <span class="btn primary">⬆ 导入图片</span>
+        <span class="btn">▣ 批量批阅</span>
+      </div>
+      <div class="essay-list">
+        <div class="essay-item active">
+          <div class="avatar" style="background:#07c160">王</div>
+          <div class="ei-info">
+            <div class="ei-top"><span class="ei-name">1_王小明_春天在哪里.txt</span><span class="ei-num">02</span></div>
+            <div class="ei-msg">标题/正文/姓名已识别 · 校对通过</div>
+          </div>
+          <span class="badge done">已批阅 ✓</span>
+        </div>
+        <div class="essay-item">
+          <div class="avatar" style="background:#5a87f0">李</div>
+          <div class="ei-info">
+            <div class="ei-top"><span class="ei-name">2_李小雨_难忘的一天.txt</span><span class="ei-num">03</span></div>
+            <div class="ei-msg">1 处待复核 · 可一键修正</div>
+          </div>
+          <span class="badge grade">批阅中</span>
+        </div>
+        <div class="essay-item">
+          <div class="avatar" style="background:#f0a05a">张</div>
+          <div class="ei-info">
+            <div class="ei-top"><span class="ei-name">3_张子涵_我的老师.txt</span><span class="ei-num">01</span></div>
+            <div class="ei-msg">2 处比对存疑，需人工确认</div>
+          </div>
+          <span class="badge wait">待校对</span>
+        </div>
+        <div class="essay-item">
+          <div class="avatar" style="background:#9b6bef">陈</div>
+          <div class="ei-info">
+            <div class="ei-top"><span class="ei-name">4_陈佳怡_追光的人.txt</span><span class="ei-num">04</span></div>
+            <div class="ei-msg">已识别，待批阅</div>
+          </div>
+          <span class="badge done">已识别</span>
+        </div>
+        <div class="essay-item">
+          <div class="avatar" style="background:#5fc9a6">刘</div>
+          <div class="ei-info">
+            <div class="ei-top"><span class="ei-name">5_刘思远_成长的滋味.txt</span><span class="ei-num">05</span></div>
+            <div class="ei-msg">等待上传原图</div>
+          </div>
+          <span class="badge proc">待识别</span>
+        </div>
+      </div>
+    </div>
+    <!-- 右侧内容区 -->
+    <div class="main">
+      <div class="m-head">
+        <h2>1_王小明_春天在哪里.txt</h2>
+        <span class="sub">· 王小明 高三(2)班 · 800 字</span>
+        <div class="rh">
+          <span class="tag">批阅标准：高考作文评分</span>
+          <span class="tag">批阅：52 分</span>
+        </div>
+      </div>
+      <div class="m-body">
+        <!-- 识别结果 -->
+        <div class="sheet on">
+          <div class="titleline">
+            <div class="zhutitle">春天在哪里</div>
+            <div class="meta">作者：<b>王小明</b> ｜ 篇数：第 2 张 ｜ 状态：识别 · 校对 · 批阅均完成</div>
+          </div>
+          <div class="divider">✦ 正文 ✦</div>
+          <p class="para">春天在哪里？我问桃树，桃花轻轻点着头；我问小河，河水哗哗地唱着歌；我问天空，燕子衔着春风飞回说来。终于，我在田野里找到了春天——它藏在每一株抽芽的油菜花里，也藏在伙伴们奔跑的笑声里。</p>
+          <p class="para">原来，春天不止停在眼里，更住在心里。<span class="mt">心中</span>有暖，便处处都是春日。</p>
+        </div>
+      </div>
+      <div class="m-actions">
+        <span class="step">批阅进度：<b>1 / 5</b> 篇已完成</span>
+        <div class="right-btns">
+          <span class="btn2">⬅ 上一篇</span>
+          <span class="btn2 green">下一篇 ➡</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

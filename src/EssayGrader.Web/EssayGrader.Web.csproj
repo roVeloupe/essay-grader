@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>EssayGrader.Web</AssemblyName>
+    <RootNamespace>EssayGrader.Web</RootNamespace>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!-- 把前端页面（仿微信 UI）作为资源打进单文件，运行时可抽到可写目录 -->
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\**\*">
+      <LogicalName>webroot/%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <!-- 已嵌入为资源，发布时不再松散拷贝 wwwroot（保证“单文件”） -->
+    <Content Update="wwwroot\**\*" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../EssayGrader.Core/EssayGrader.Core.csproj" />
+  </ItemGroup>
+
+</Project>
