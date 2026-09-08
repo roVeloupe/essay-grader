@@ -24,7 +24,9 @@
 
   // ---------- 工具 ----------
   async function api(url, opts = {}) {
-    const res = await fetch(url, opts);
+    let res;
+    try { res = await fetch(url, opts); }
+    catch (e) { throw new Error("本地服务无响应（Failed to fetch）。若是在导入多张图片，请减少单次选择数量或图片分辨率后重试"); }
     if (!res.ok) {
       let msg = res.status + " " + res.statusText;
       try { const j = await res.json(); if (j.message) msg = j.message; } catch (e) {}

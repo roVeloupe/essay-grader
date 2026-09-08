@@ -120,6 +120,9 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
     ContentRootPath = AppContext.BaseDirectory // 固定内容根，避免受启动目录影响
 });
 builder.WebHost.UseUrls($"http://0.0.0.0:{Environment.GetEnvironmentVariable("PORT") ?? "5000"}");
+// 单机本地应用：允许多张高清扫描图一次导入，放开请求体与 multipart 大小限制
+builder.WebHost.ConfigureKestrel(o => { o.Limits.MaxRequestBodySize = null; });
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o => o.MultipartBodyLengthLimit = 2L * 1024 * 1024 * 1024);
 builder.Services.AddRouting();
 builder.Services.AddAntiforgery();
 var app = builder.Build();
