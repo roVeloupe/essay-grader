@@ -108,8 +108,8 @@
       <div class="main-empty">
         <div class="me-icon">📄</div>
         <div class="me-title">${count ? "选一篇作文开始批阅" : "开始批改你的第一篇作文"}</div>
-        <div class="me-sub">支持 JPG / PNG 扫描图片，按文件名自然排序导入。<br>AI 会自动完成：图片识别 → 纠错校对比对 → 按标准批阅 → 导出报告</div>
-        <button class="btn-big" id="bigImport">＋ 导入作文图片</button>
+        <div class="me-sub">支持一次选择多张 JPG / PNG 扫描图片（Ctrl/Shift 多选），<br>按文件名自然排序导入后即自动逐张批阅（识别 → 校对比对 → 评分），<br>完成后点「导出报告」即可按文件名顺序导出全部结果。</div>
+        <button class="btn-big" id="bigImport">＋ 导入作文图片（可多选）</button>
         ${count ? `<button class="btn-big ghost" id="bigBatch">⏩ 一键批阅全部（${count} 篇）</button>` : ""}
         <div class="me-hint">提示：也可点击左侧列表底部的小按钮</div>
       </div>`;
@@ -123,9 +123,13 @@
       const files = e.target.files; if (!files.length) return;
       const fd = new FormData();
       for (const f of files) fd.append("files", f, f.name);
-      toast("导入中…");
-      try { await api("/api/import", { method: "POST", body: fd }); await refreshEssays(); toast("导入 " + files.length + " 张图片"); }
-      catch (err) { toast("导入失败：" + err.message); }
+      toast(`正在导入 ${files.length} 张图片…`);
+      try {
+        await api("/api/import", { method: "POST", body: fd });
+        await refreshEssays();
+        // 一键到底：导入后自动按文件名顺序逐张批阅（识别→校对→评分）
+        await runBatch(true);
+      } catch (err) { toast("导入失败：" + err.message); }
       e.target.value = "";
     });
     $("#btnBatch").addEventListener("click", runBatch);
@@ -275,21 +279,31 @@
     }
   }
 
-  async function runBatch() {
+  async function runBatch(auto) {
     if (!state.essays.length) return toast("请先导入图片");
-    toast("批阅中…（依次识别→校对→批阅）");
     const tpl = state.selectedCorrectTemplate || defaultTemplateId();
-    for (const e of state.essays) {
+    if (!tpl) return toast("请先在「批阅标准」中创建或选择评分标准");
+    const total = state.essays.length;
+    toast(`${auto ? "已导入，开始自动" : "开始"}批量批阅：${total} 篇，按文件名顺序逐张处理…`);
+    let ok = 0, fail = 0;
+    for (let i = 0; i < total; i++) {
+      const e = state.essays[i];
       try {
-        let d = await api(`/api/essays/${e.id}/recognize`, { method: "POST" });
-        d = await api(`/api/essays/${e.id}/correct`, { method: "POST" });
+        toast(`[${i + 1}/${total}] ${e.fileName}：识别中…`);
+        await api(`/api/essays/${e.id}/recognize`, { method: "POST" });
+        toast(`[${i + 1}/${total}] ${e.fileName}：校对中…`);
+        await api(`/api/essays/${e.id}/correct`, { method: "POST" });
+        toast(`[${i + 1}/${total}] ${e.fileName}：批阅中…`);
         await api(`/api/essays/${e.id}/grade?templateId=${tpl}`, { method: "POST" });
-        toast(`已完成 ${e.fileName}`);
-      } catch (err) { toast(e.fileName + " 处理失败：" + err.message); }
+        ok++;
+      } catch (err) {
+        fail++;
+        toast(`[${i + 1}/${total}] ${e.fileName} 处理失败：${err.message}，跳过继续`);
+      }
     }
     await refreshEssays();
     if (state.currentId) await selectEssay(state.currentId);
-    toast("全部批阅完成");
+    toast(`批量完成：成功 ${ok}，失败 ${fail}。点「导出报告」按文件名顺序导出`);
   }
 
   async function exportReport() {
