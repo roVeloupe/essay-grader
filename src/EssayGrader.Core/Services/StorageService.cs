@@ -29,6 +29,9 @@ public class StorageService
     {
         await using var c = Open();
         var sql = """
+            CREATE TABLE IF NOT EXISTS batches(
+                id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, note TEXT,
+                created_at TEXT, updated_at TEXT);
             CREATE TABLE IF NOT EXISTS essays(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 file_name TEXT NOT NULL, sort_order INT, title TEXT, author TEXT,
@@ -61,6 +64,15 @@ public class StorageService
         await using var cmd = c.CreateCommand();
         cmd.CommandText = sql;
         await cmd.ExecuteNonQueryAsync(ct);
+
+        // 迁移：essays 加 batch_id 列（SQLite 不支持 IF NOT EXISTS on column，异常忽略）
+        try
+        {
+            await using var mig = c.CreateCommand();
+            mig.CommandText = "ALTER TABLE essays ADD COLUMN batch_id INT DEFAULT 0";
+            await mig.ExecuteNonQueryAsync(ct);
+        }
+        catch { /* 列已存在 */ }
     }
 
     // ---------- Essays ----------
@@ -71,8 +83,8 @@ public class StorageService
         {
             await using var ins = c.CreateCommand();
             ins.CommandText = """
-                INSERT INTO essays(file_name,sort_order,title,author,page_count,status,created_at,updated_at)
-                VALUES($fn,$so,$t,$a,$pc,$st,$ca,$ua)
+                INSERT INTO essays(file_name,sort_order,title,author,page_count,status,batch_id,created_at,updated_at)
+                VALUES($fn,$so,$t,$a,$pc,$st,$bi,$ca,$ua)
                 """;
             ins.Parameters.AddWithValue("$fn", e.FileName);
             ins.Parameters.AddWithValue("$so", e.SortOrder);
@@ -80,6 +92,7 @@ public class StorageService
             ins.Parameters.AddWithValue("$a", D(e.Author));
             ins.Parameters.AddWithValue("$pc", e.PageCount);
             ins.Parameters.AddWithValue("$st", (int)e.Status);
+            ins.Parameters.AddWithValue("$bi", e.BatchId);
             ins.Parameters.AddWithValue("$ca", e.CreatedAt.ToString("O"));
             ins.Parameters.AddWithValue("$ua", D(e.UpdatedAt?.ToString("O")));
             await ins.ExecuteNonQueryAsync(ct);
@@ -91,7 +104,7 @@ public class StorageService
         cmd.CommandText = """
             UPDATE essays
             SET file_name=$fn, sort_order=$so, title=$t, author=$a, page_count=$pc,
-                status=$st, created_at=$ca, updated_at=$ua
+                status=$st, batch_id=$bi, created_at=$ca, updated_at=$ua
             WHERE id=$id
             """;
         cmd.Parameters.AddWithValue("$id", e.Id);
@@ -101,6 +114,7 @@ public class StorageService
         cmd.Parameters.AddWithValue("$a", D(e.Author));
         cmd.Parameters.AddWithValue("$pc", e.PageCount);
         cmd.Parameters.AddWithValue("$st", (int)e.Status);
+        cmd.Parameters.AddWithValue("$bi", e.BatchId);
         cmd.Parameters.AddWithValue("$ca", e.CreatedAt.ToString("O"));
         cmd.Parameters.AddWithValue("$ua", D(e.UpdatedAt?.ToString("O")));
         await cmd.ExecuteNonQueryAsync(ct);
@@ -109,12 +123,17 @@ public class StorageService
     /// <summary>把 null 转为 DBNull，避免 AddWithValue 抛 “Value must be set”。</summary>
     private static object D(object? v) => v switch { null => DBNull.Value, _ => v };
 
-    public async Task<List<Essay>> GetEssaysAsync(CancellationToken ct = default)
+    public async Task<List<Essay>> GetEssaysAsync(CancellationToken ct = default, int batchId = 0)
     {
         var list = new List<Essay>();
         await using var c = Open();
         await using var cmd = c.CreateCommand();
-        cmd.CommandText = "SELECT * FROM essays ORDER BY sort_order ASC, id ASC";
+        // 显式列名：batch_id 由 ALTER 加在表末尾，SELECT * 的索引位置不可靠
+        const string COLS = "id,file_name,sort_order,title,author,page_count,status,batch_id,created_at,updated_at";
+        cmd.CommandText = batchId > 0
+            ? $"SELECT {COLS} FROM essays WHERE batch_id=$b ORDER BY sort_order ASC, id ASC"
+            : $"SELECT {COLS} FROM essays ORDER BY sort_order ASC, id ASC";
+        if (batchId > 0) cmd.Parameters.AddWithValue("$b", batchId);
         await using var r = await cmd.ExecuteReaderAsync(ct);
         while (await r.ReadAsync(ct))
         {
@@ -123,7 +142,8 @@ public class StorageService
                 Id = r.GetInt32(0), FileName = r.GetString(1), SortOrder = r.GetInt32(2),
                 Title = r.IsDBNull(3) ? "" : r.GetString(3),
                 Author = r.IsDBNull(4) ? "" : r.GetString(4),
-                PageCount = r.GetInt32(5), Status = (Enums.EssayStatus)r.GetInt32(6)
+                PageCount = r.GetInt32(5), Status = (Enums.EssayStatus)r.GetInt32(6),
+                BatchId = r.IsDBNull(7) ? 0 : r.GetInt32(7)
             });
         }
         return list;
@@ -377,6 +397,82 @@ public class StorageService
             }
         }
         return g;
+    }
+
+    // ---------- Batches（批阅记录） ----------
+    public async Task<Batch> SaveBatchAsync(Batch b, CancellationToken ct = default)
+    {
+        await using var c = Open();
+        await using var cmd = c.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO batches(name,note,created_at,updated_at)
+            VALUES($n,$nt,$ca,$ua)
+            """;
+        cmd.Parameters.AddWithValue("$n", D(b.Name));
+        cmd.Parameters.AddWithValue("$nt", D(b.Note));
+        cmd.Parameters.AddWithValue("$ca", b.CreatedAt.ToString("O"));
+        cmd.Parameters.AddWithValue("$ua", b.UpdatedAt.ToString("O"));
+        await cmd.ExecuteNonQueryAsync(ct);
+        b.Id = (int)await LastInsertIdAsync(c, ct);
+        return b;
+    }
+
+    public async Task UpdateBatchAsync(Batch b, CancellationToken ct = default)
+    {
+        await using var c = Open();
+        await using var cmd = c.CreateCommand();
+        cmd.CommandText = "UPDATE batches SET name=$n, note=$nt, updated_at=$ua WHERE id=$id";
+        cmd.Parameters.AddWithValue("$n", D(b.Name));
+        cmd.Parameters.AddWithValue("$nt", D(b.Note));
+        cmd.Parameters.AddWithValue("$ua", DateTime.Now.ToString("O"));
+        cmd.Parameters.AddWithValue("$id", b.Id);
+        await cmd.ExecuteNonQueryAsync(ct);
+    }
+
+    /// <summary>批次列表（含篇数/已批阅数）。</summary>
+    public async Task<List<Batch>> GetBatchesAsync(CancellationToken ct = default)
+    {
+        var list = new List<Batch>();
+        await using var c = Open();
+        await using var cmd = c.CreateCommand();
+        cmd.CommandText = """
+            SELECT b.id,b.name,b.note,b.created_at,b.updated_at,
+                   (SELECT COUNT(*) FROM essays e WHERE e.batch_id=b.id) AS cnt,
+                   (SELECT COUNT(*) FROM essays e JOIN gradings g ON g.essay_id=e.id WHERE e.batch_id=b.id) AS graded
+            FROM batches b ORDER BY b.id DESC
+            """;
+        await using var r = await cmd.ExecuteReaderAsync(ct);
+        while (await r.ReadAsync(ct))
+        {
+            list.Add(new Batch
+            {
+                Id = r.GetInt32(0),
+                Name = r.IsDBNull(1) ? "" : r.GetString(1),
+                Note = r.IsDBNull(2) ? "" : r.GetString(2),
+                CreatedAt = DateTime.Parse(r.GetString(3)),
+                UpdatedAt = DateTime.Parse(r.GetString(4)),
+                EssayCount = r.GetInt32(5), GradedCount = r.GetInt32(6)
+            });
+        }
+        return list;
+    }
+
+    /// <summary>删除批次（其下作文置为未分组，保留数据）。</summary>
+    public async Task DeleteBatchAsync(int id, CancellationToken ct = default)
+    {
+        await using var c = Open();
+        await using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = "DELETE FROM batches WHERE id=$id";
+            cmd.Parameters.AddWithValue("$id", id);
+            await cmd.ExecuteNonQueryAsync(ct);
+        }
+        await using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = "UPDATE essays SET batch_id=0 WHERE batch_id=$id";
+            cmd.Parameters.AddWithValue("$id", id);
+            await cmd.ExecuteNonQueryAsync(ct);
+        }
     }
 
     // ---------- Properties (settings 等简单的键值) ----------

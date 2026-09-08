@@ -6,7 +6,9 @@
 
   // ---------- 状态 ----------
   const state = {
-    essays: [],          // 列表（按文件名排序）
+    essays: [],          // 列表（当前批次，按文件名排序）
+    batches: [],         // 全部批阅记录（批次）
+    currentBatchId: 0,   // 当前批次
     templates: [],       // 标准模板
     settings: null,
     nav: "grade",        // 当前导航：grade/templates/records/engine/settings
@@ -44,11 +46,113 @@
   async function init() {
     bindNav();
     bindImports();
+    bindBatches();
     bindMainEmpty();
     try { await loadTemplates(); } catch (e) {}
     try { const s = await api("/api/settings"); state.settings = s; } catch (e) {}
-    try { await refreshEssays(); } catch (e) { state.essays = []; renderList(); if (state.nav === "grade") renderGradeEmpty(); }
+    try {
+      await loadBatches();
+      // 恢复上次批次；无批次则自动建一个（批阅记录）
+      const saved = +(localStorage.getItem("eg_current_batch") || 0);
+      const hit = state.batches.find((b) => b.id === saved);
+      if (hit) await setCurrentBatch(hit.id);
+      else if (state.batches.length) await setCurrentBatch(state.batches[0].id);
+      else await newBatch();
+    } catch (e) { state.essays = []; renderList(); if (state.nav === "grade") renderGradeEmpty(); }
     checkConn();
+  }
+
+  // ---------- 批次（批阅记录） ----------
+  function fmtTime(s) {
+    try { const d = new Date(s); return d.toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; }
+  }
+
+  async function loadBatches() {
+    state.batches = await api("/api/batches");
+    renderBatchTag();
+    if (state.nav === "records") renderRecords();
+  }
+
+  function batchName(id) {
+    const b = state.batches.find((x) => x.id === id);
+    return b ? b.name : "";
+  }
+
+  async function setCurrentBatch(id) {
+    state.currentBatchId = id;
+    localStorage.setItem("eg_current_batch", String(id));
+    renderBatchTag();
+    await refreshEssays();
+  }
+
+  function renderBatchTag() {
+    const tag = $("#batchTag");
+    if (!tag) return;
+    const b = state.batches.find((x) => x.id === state.currentBatchId);
+    tag.textContent = b ? `📁 ${b.name}（${b.essayCount} 篇）` : "📁 选择批阅记录";
+    tag.title = "点击切换批阅记录";
+  }
+
+  async function newBatch() {
+    const name = prompt("新建批阅记录：\n（例如：高二3班 月考作文 2026-09-08）", defaultBatchName());
+    if (!name || !name.trim()) return;
+    try {
+      const b = await api("/api/batches", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: name.trim() }) });
+      await loadBatches();
+      await setCurrentBatch(b.id);
+      toast("已创建批阅记录「" + b.name + "」，现在导入的图片会归入该记录");
+    } catch (e) { toast("新建失败：" + e.message); }
+  }
+
+  function defaultBatchName() {
+    const d = new Date();
+    return `作文批阅 ${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  }
+
+  function renameBatch(id) {
+    const b = state.batches.find((x) => x.id === id); if (!b) return;
+    const name = prompt("重命名批阅记录：", b.name);
+    if (!name || !name.trim()) return;
+    api("/api/batches/" + id, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: name.trim(), note: b.note || "" }) })
+      .then(() => { loadBatches(); if (state.currentBatchId === id) { renderBatchTag(); refreshEssays(); } })
+      .catch((e) => toast("重命名失败：" + e.message));
+  }
+
+  async function removeBatch(id) {
+    const b = state.batches.find((x) => x.id === id); if (!b) return;
+    if (!confirm("删除批阅记录「" + b.name + "」？其下作文将从记录中移除（图片文件仍保留在数据目录）。")) return;
+    try {
+      await api("/api/batches/" + id, { method: "DELETE" });
+      await loadBatches();
+      if (state.currentBatchId === id) {
+        if (state.batches.length) await setCurrentBatch(state.batches[0].id);
+        else { state.currentBatchId = 0; localStorage.removeItem("eg_current_batch"); renderBatchTag(); await refreshEssays(); }
+      }
+      toast("已删除记录");
+    } catch (e) { toast("删除失败：" + e.message); }
+  }
+
+  function bindBatches() {
+    $("#batchTag").addEventListener("click", openBatchPicker);
+    $("#btnNewBatch").addEventListener("click", newBatch);
+    $("#btnAddBatch").addEventListener("click", newBatch);
+    document.addEventListener("click", (e) => { if (!e.target.closest(".batch-picker") && !e.target.closest("#batchTag")) $(".batch-picker")?.remove(); });
+  }
+
+  function openBatchPicker() {
+    $(".batch-picker")?.remove();
+    const tag = $("#batchTag");
+    const p = el(`<div class="batch-picker">
+      ${state.batches.length ? state.batches.map((b) => `<div class="bp-item ${b.id === state.currentBatchId ? "on" : ""}" data-id="${b.id}">📁 ${escapeHtml(b.name)}<span class="bp-num">${b.essayCount} 篇 / ${b.gradedCount} 已批</span></div>`).join("") : '<div class="bp-item" style="color:#999">暂无批阅记录</div>'}
+      <div class="bp-item" data-new="1" style="color:var(--green);font-weight:600">＋ 新建批阅记录</div>
+    </div>`);
+    const r = tag.getBoundingClientRect();
+    p.style.left = r.left + "px";
+    p.style.top = (r.bottom + 4) + "px";
+    document.body.appendChild(p);
+    p.querySelectorAll(".bp-item[data-id]").forEach((it) => it.addEventListener("click", () => { p.remove(); setCurrentBatch(+it.dataset.id); }));
+    const nw = p.querySelector(".bp-item[data-new]");
+    if (nw) nw.addEventListener("click", () => { p.remove(); newBatch(); });
   }
 
   // 右侧空态：大引导按钮（比左侧列表底部的小按钮更醒目）
@@ -121,11 +225,12 @@
     $("#btnImport").addEventListener("click", () => $("#importInput").click());
     $("#importInput").addEventListener("change", async (e) => {
       const files = e.target.files; if (!files.length) return;
+      if (!state.currentBatchId) { toast("请先选择或新建一个批阅记录"); return; }
       const fd = new FormData();
       for (const f of files) fd.append("files", f, f.name);
-      toast(`正在导入 ${files.length} 张图片…`);
+      toast(`正在导入 ${files.length} 张图片到「${batchName(state.currentBatchId)}」…`);
       try {
-        await api("/api/import", { method: "POST", body: fd });
+        await api("/api/import?batchId=" + state.currentBatchId, { method: "POST", body: fd });
         await refreshEssays();
         // 一键到底：导入后自动按文件名顺序逐张批阅（识别→校对→评分）
         await runBatch(true);
@@ -137,7 +242,7 @@
   }
 
   async function refreshEssays() {
-    state.essays = await api("/api/essays");
+    state.essays = await api("/api/essays?batchId=" + (state.currentBatchId || 0));
     if (state.currentId && !state.essays.some((x) => x.id === state.currentId)) state.currentId = null;
     renderList();
     if (state.nav === "grade") renderGradeEmpty();
@@ -308,10 +413,11 @@
 
   async function exportReport() {
     try {
-      const r = await api("/api/export", { method: "POST" });
+      const r = await api("/api/export?batchId=" + (state.currentBatchId || 0), { method: "POST" });
       const a = document.createElement("a");
       a.href = "data:text/markdown;charset=utf-8," + encodeURIComponent(r.text);
-      a.download = "批阅报告.md"; a.click();
+      a.download = `批阅报告${batchName(state.currentBatchId) ? "-" + batchName(state.currentBatchId) : ""}.md`.replace(/[\\/:*?"<>|]/g, "");
+      a.click();
       toast("已导出：" + r.path);
     } catch (e) { toast("导出失败：" + e.message); }
   }
@@ -499,17 +605,30 @@
     } catch (e) { toast("保存失败：" + e.message); }
   }
 
-  // ---------- 批阅记录 ----------
+  // ---------- 批阅记录（按批次） ----------
   function renderRecords() {
     const list = $("#recordsList");
     list.innerHTML = "";
-    const done = state.essays.filter((e) => e.status === "Graded");
-    if (!done.length) { list.innerHTML = '<div class="empty">还没有批阅记录</div>'; $("#recordsList").innerHTML = list.innerHTML; return; }
-    $("#recordsList").innerHTML = "";
-    done.forEach((e) => {
-      const r = el(`<div class="tpl-card"><div class="tc-top"><span class="tc-name">#${e.sortOrder} ${escapeHtml(e.title || e.fileName)}</span><span class="tc-total">${escapeHtml(e.author)}</span></div><div style="font-size:12px;color:#666;margin-top:4px">${escapeHtml(e.fileName)}</div></div>`);
-      r.onclick = async () => { setNav("grade"); await selectEssay(e.id); };
-      $("#recordsList").appendChild(r);
+    if (!state.batches.length) { list.innerHTML = '<div class="empty">还没有批阅记录，点击右上角「＋ 新建批阅记录」</div>'; return; }
+    state.batches.forEach((b) => {
+      const card = el(`
+        <div class="tpl-card ${b.id === state.currentBatchId ? "tpl-card-on" : ""}">
+          <div class="tc-top">
+            <span class="tc-name">${escapeHtml(b.name)}${b.id === state.currentBatchId ? "（当前）" : ""}</span>
+            <span class="tc-total">${b.essayCount} 篇 · ${b.gradedCount} 已批</span>
+            <div class="tc-ops">
+              <button class="btn2 green">打开</button>
+              <button class="btn2">重命名</button>
+              <button class="btn2">删除</button>
+            </div>
+          </div>
+          <div class="dims-tag">创建于 ${fmtTime(b.createdAt)}</div>
+        </div>`);
+      const [open, rename, del] = card.querySelectorAll("button");
+      open.onclick = async () => { await setCurrentBatch(b.id); setNav("grade"); };
+      rename.onclick = () => renameBatch(b.id);
+      del.onclick = () => removeBatch(b.id);
+      list.appendChild(card);
     });
   }
 

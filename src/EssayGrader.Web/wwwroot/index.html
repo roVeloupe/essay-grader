@@ -45,6 +45,10 @@
         <span class="mid-title" id="midTitle">作文批阅</span>
         <span class="mid-count" id="midCount"></span>
       </div>
+      <div class="batch-bar" id="batchBar">
+        <span class="batch-tag" id="batchTag" title="点击切换批阅记录">📁 未选择批次</span>
+        <span class="batch-new" id="btnNewBatch" title="新建批阅记录，开始新一批批改">＋ 新批阅</span>
+      </div>
       <div class="search"><input id="searchInput" placeholder="搜索文件名 / 学生姓名"><span class="si">⌕</span></div>
 
       <div class="list-scroll" id="listRoot"><div class="empty">暂无数据</div></div>
@@ -73,7 +77,10 @@
       <!-- 记录视图 -->
       <div id="view-records" class="view-area" style="display:none">
         <div class="tpl-manage">
-          <div class="tpl-head"><h3>批阅记录（按文件名顺序）</h3></div>
+          <div class="tpl-head">
+            <h3>批阅记录（按批次）</h3>
+            <button class="btn2 green" id="btnAddBatch">＋ 新建批阅记录</button>
+          </div>
           <div id="recordsList" class="tpl-list"></div>
         </div>
       </div>

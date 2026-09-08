@@ -6,6 +6,7 @@ namespace EssayGrader.Core.Models;
 public class Essay
 {
     public int Id { get; set; }
+    public int BatchId { get; set; }                  // 所属批阅批次（0=未分组）
     public string FileName { get; set; } = "";          // 主文件名，用于自然排序
     public int SortOrder { get; set; }                  // 已按文件名算出的排序序号
     public string Title { get; set; } = "";
@@ -17,6 +18,18 @@ public class Essay
 
     public List<EssayPage> Pages { get; set; } = new();
     public List<BodySentence> Sentences { get; set; } = new();
+}
+
+/// <summary>一次批阅批次（一条批改记录），可纳入多篇作文。</summary>
+public class Batch
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public string Note { get; set; } = "";
+    public int EssayCount { get; set; }         // 列表用：篇数
+    public int GradedCount { get; set; }        // 列表用：已批阅篇数
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
 }
 
 /// <summary>作文的一页扫描图。</summary>

@@ -151,7 +151,7 @@ object EssayDto(Essay e, bool hasImage)
 {
     return new
     {
-        e.Id, e.FileName, e.SortOrder, e.Title, e.Author, e.PageCount,
+        e.Id, e.BatchId, e.FileName, e.SortOrder, e.Title, e.Author, e.PageCount,
         Status = e.Status.ToString(), StatusInt = (int)e.Status,
         hasImage, imageUrl = hasImage ? $"/api/essays/{e.Id}/image" : null,
         thumbUrl = hasImage ? $"/api/essays/{e.Id}/thumb" : null,
@@ -245,17 +245,40 @@ app.MapPost("/api/templates/{id:int}/set-default", async (int id, CancellationTo
     return Results.Ok(new { ok = true });
 });
 
-// ---------- 作文 ----------
-app.MapGet("/api/essays", async (CancellationToken ct) =>
+// ---------- 批阅记录（批次） ----------
+app.MapGet("/api/batches", async (CancellationToken ct) => Results.Ok(await db.GetBatchesAsync(ct)));
+
+app.MapPost("/api/batches", async (BatchIn input, CancellationToken ct) =>
 {
-    var all = await db.GetEssaysAsync(ct);
+    if (string.IsNullOrWhiteSpace(input.Name)) return Results.BadRequest("批次名不能为空");
+    var b = await db.SaveBatchAsync(new Batch { Name = input.Name.Trim(), Note = input.Note ?? "" }, ct);
+    return Results.Ok(b);
+});
+
+app.MapPut("/api/batches/{id:int}", async (int id, BatchIn input, CancellationToken ct) =>
+{
+    if (string.IsNullOrWhiteSpace(input.Name)) return Results.BadRequest("批次名不能为空");
+    await db.UpdateBatchAsync(new Batch { Id = id, Name = input.Name.Trim(), Note = input.Note ?? "" }, ct);
+    return Results.Ok(new { ok = true });
+});
+
+app.MapDelete("/api/batches/{id:int}", async (int id, CancellationToken ct) =>
+{
+    await db.DeleteBatchAsync(id, ct);
+    return Results.Ok(new { ok = true });
+});
+
+// ---------- 作文 ----------
+app.MapGet("/api/essays", async (int batchId, CancellationToken ct) =>
+{
+    var all = await db.GetEssaysAsync(ct, batchId);
     var dtos = new List<object>();
     foreach (var e in all)
         dtos.Add(EssayDto(e, File.Exists(ImagePath(e.Id, e.FileName))));
     return Results.Ok(dtos);
 });
 
-app.MapPost("/api/import", async (IFormFileCollection files, HttpContext ctx, CancellationToken ct) =>
+app.MapPost("/api/import", async (int batchId, IFormFileCollection files, HttpContext ctx, CancellationToken ct) =>
 {
     var uploaded = new List<(string Name, Stream S)>();
     foreach (var f in files)
@@ -266,11 +289,12 @@ app.MapPost("/api/import", async (IFormFileCollection files, HttpContext ctx, Ca
     // 1) 按文件名自然排序生成 Essay
     var essays = sorter.BuildEssays(uploaded.Select(x => x.Name).ToList());
 
-    // 2) 存文件、写库
+    // 2) 存文件、写库（归入当前批次）
     var list = new List<object>();
     for (int i = 0; i < essays.Count; i++)
     {
         var e = essays[i];
+        e.BatchId = batchId;
         await db.UpsertEssayAsync(e, ct); // 写库取 id
         var imgPath = ImagePath(e.Id, e.FileName);
         var fs = File.Create(imgPath);
@@ -359,10 +383,10 @@ app.MapPut("/api/essays/{id:int}/sentences", async (int id, List<BodySentence> s
     return Results.Ok(new { ok = true, essay = EssayDto(e, true) });
 });
 
-// ---------- 导出（按文件名顺序合并） ----------
-app.MapPost("/api/export", async (CancellationToken ct) =>
+// ---------- 导出（按文件名顺序合并，可按批次） ----------
+app.MapPost("/api/export", async (int batchId, CancellationToken ct) =>
 {
-    var all = await db.GetEssaysAsync(ct);
+    var all = await db.GetEssaysAsync(ct, batchId);
     var rows = new List<(Essay, GradingOrder?)>();
     foreach (var e in all)
     {
@@ -388,4 +412,10 @@ public class SettingsIn
     public string? Format { get; set; }
     public bool? MergeToSingleFile { get; set; }
     public int? Concurrency { get; set; }
+}
+
+public class BatchIn
+{
+    public string? Name { get; set; }
+    public string? Note { get; set; }
 }
