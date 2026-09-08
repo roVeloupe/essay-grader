@@ -1,7 +1,7 @@
 *{box-sizing:border-box;margin:0;padding:0;font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif}
 :root{--nav:#191c1e;--green:#07c160;--list:#eef0f1;--active:#d7d9da;--border:#e7e7e7;--txt:#111;--sub:#888}
 html,body{height:100%;background:#d6d7d9;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.win{width:1180px;height:740px;background:#fff;border-radius:8px;box-shadow:0 14px 50px rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden}
+.win{width:1180px;max-width:100vw;height:740px;max-height:100vh;background:#fff;border-radius:8px;box-shadow:0 14px 50px rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden}
 
 /* 标题栏 */
 .titlebar{height:34px;background:#f5f5f5;display:flex;align-items:center;padding:0 12px;gap:10px;border-bottom:1px solid var(--border);flex:none}
@@ -14,10 +14,10 @@ html,body{height:100%;background:#d6d7d9;display:flex;align-items:center;justify
 .titlebar .conn.ok .dot{background:#22c55e}
 .titlebar .conn.err .dot{background:#ef4444}
 
-.body{flex:1;display:flex;min-height:0}
+.body{flex:1;display:flex;min-height:0;height:0}
 
 /* 左导航（仿微信：头像+图标竖栏） */
-.nav{width:64px;background:var(--nav);display:flex;flex-direction:column;align-items:center;padding-top:14px;gap:6px;flex:none}
+.nav{width:64px;background:var(--nav);display:flex;flex-direction:column;align-items:center;padding-top:14px;gap:6px;flex:none;height:100%;overflow:hidden}
 .nav .avatar-btn{width:44px;height:44px;border-radius:6px;background:painting;overflow:hidden;cursor:pointer;margin-bottom:10px}
 .nav .avatar-bg{width:44px;height:44px;border-radius:6px;background:#576b95;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px}
 .nav .nav-item{width:48px;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#8b9096;font-size:10px;cursor:pointer;transition:background .12s}
@@ -27,7 +27,7 @@ html,body{height:100%;background:#d6d7d9;display:flex;align-items:center;justify
 .nav .spacer{flex:1}
 
 /* 中间列 */
-.mid{width:300px;flex:none;background:var(--list);display:flex;flex-direction:column;min-height:0}
+.mid{width:300px;flex:none;background:var(--list);display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden}
 .mid-head{height:50px;display:flex;align-items:flex-end;padding:0 18px 8px;gap:8px;background:var(--list);flex:none}
 .mid-title{font-size:19px;font-weight:600;color:#000}
 .mid-count{font-size:12px;color:var(--sub);padding-bottom:2px}
@@ -56,7 +56,18 @@ html,body{height:100%;background:#d6d7d9;display:flex;align-items:center;justify
 .empty{color:#aaa;text-align:center;padding:40px 0;font-size:13px}
 
 /* 右侧主区 */
-.main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:#f3f4f5}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:#f3f4f5;overflow:hidden}
+
+/* 右侧空态引导 */
+.main-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#555;padding:20px;text-align:center}
+.main-empty .me-icon{font-size:72px;line-height:1;opacity:.85}
+.main-empty .me-title{font-size:18px;font-weight:600;color:#222}
+.main-empty .me-sub{font-size:13px;color:#777;max-width:360px;line-height:1.8}
+.main-empty .me-hint{font-size:12px;color:#aaa}
+.main-empty .btn-big{padding:12px 32px;background:var(--green);color:#fff;border:none;border-radius:22px;font-size:14px;cursor:pointer;box-shadow:0 3px 10px rgba(7,193,96,.3);transition:transform .12s}
+.main-empty .btn-big:hover{transform:translateY(-1px)}
+.main-empty .btn-big.ghost{background:#fff;color:#333;border:1px solid #e0e0e0;box-shadow:none}
+.main-empty .btn-big.ghost:hover{border-color:var(--green);color:var(--green)}
 .m-head{height:56px;background:#f3f4f5;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;flex:none}
 .m-head h2{font-size:15px;color:var(--txt);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .m-head .sub{font-size:12px;color:var(--sub);white-space:nowrap}

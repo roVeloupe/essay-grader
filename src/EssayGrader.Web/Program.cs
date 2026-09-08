@@ -40,14 +40,15 @@ var imagesRoot = Path.Combine(dataRoot, "uploads");
 var dbPath = Path.Combine(dataRoot, "app.db");
 Directory.CreateDirectory(imagesRoot);
 
-// 从嵌入资源抽取前端页面（单 exe 模式下 wwwroot 不随 exe 解压），否则用 exe 旁/内容根的 wwwroot
+// 前端页面优先级：①exe 旁 wwwroot（便于用户覆盖升级）→ ②%LocalAppData% 已抽取的嵌入资源
 var webRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
-var embeddedWeb = Assembly.GetExecutingAssembly()
-    .GetManifestResourceNames().Where(n => n.StartsWith("webroot/", StringComparison.Ordinal)).ToArray();
-if (embeddedWeb.Length > 0)
+if (!File.Exists(Path.Combine(webRoot, "index.html")))
 {
+    // 没有外部 wwwroot：从嵌入资源抽取到可写目录，下次运行复用
     webRoot = Path.Combine(appDataDir, "webroot");
-    ExtractEmbeddedWeb(embeddedWeb, webRoot);
+    var embeddedWeb = Assembly.GetExecutingAssembly()
+        .GetManifestResourceNames().Where(n => n.StartsWith("webroot/", StringComparison.Ordinal)).ToArray();
+    if (embeddedWeb.Length > 0) ExtractEmbeddedWeb(embeddedWeb, webRoot);
 }
 
 static void ExtractEmbeddedWeb(string[] names, string destDir)

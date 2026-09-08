@@ -44,10 +44,19 @@
   async function init() {
     bindNav();
     bindImports();
+    bindMainEmpty();
     try { await loadTemplates(); } catch (e) {}
     try { const s = await api("/api/settings"); state.settings = s; } catch (e) {}
-    await refreshEssays();
+    try { await refreshEssays(); } catch (e) { state.essays = []; renderList(); if (state.nav === "grade") renderGradeEmpty(); }
     checkConn();
+  }
+
+  // 右侧空态：大引导按钮（比左侧列表底部的小按钮更醒目）
+  function bindMainEmpty() {
+    const bigImport = $("#bigImport");
+    const bigBatch = $("#bigBatch");
+    if (bigImport) bigImport.addEventListener("click", () => $("#importInput").click());
+    if (bigBatch) bigBatch.addEventListener("click", runBatch);
   }
 
   async function checkConn() {
@@ -79,11 +88,32 @@
     $("#view-" + nav).style.display = "flex";
     const titles = { grade: "作文批阅", templates: "批阅标准", records: "批阅记录", engine: "引擎状态", settings: "设置" };
     $("#midTitle").textContent = titles[nav];
-    if (nav === "grade") { renderList(); renderFooter(); }
+    if (nav === "grade") {
+      $("#midFoot").style.display = "";
+      renderList();
+      renderGradeEmpty();
+    }
     if (nav === "templates") { renderTemplates(); $("#midFoot").style.display = "none"; }
     if (nav === "records") { renderRecords(); $("#midFoot").style.display = "none"; }
     if (nav === "engine") { renderEngine(); $("#midFoot").style.display = "none"; }
     if (nav === "settings") { openSettings(); $("#midFoot").style.display = "none"; }
+  }
+
+  // 右侧空态：没有 currentId 或无作文时的大引导区
+  function renderGradeEmpty() {
+    const grade = $("#view-grade");
+    if (state.currentId) return; // 选中作文时 renderGradeView 会接管
+    const count = state.essays.length;
+    grade.innerHTML = `
+      <div class="main-empty">
+        <div class="me-icon">📄</div>
+        <div class="me-title">${count ? "选一篇作文开始批阅" : "开始批改你的第一篇作文"}</div>
+        <div class="me-sub">支持 JPG / PNG 扫描图片，按文件名自然排序导入。<br>AI 会自动完成：图片识别 → 纠错校对比对 → 按标准批阅 → 导出报告</div>
+        <button class="btn-big" id="bigImport">＋ 导入作文图片</button>
+        ${count ? `<button class="btn-big ghost" id="bigBatch">⏩ 一键批阅全部（${count} 篇）</button>` : ""}
+        <div class="me-hint">提示：也可点击左侧列表底部的小按钮</div>
+      </div>`;
+    bindMainEmpty();
   }
 
   // ---------- 导入与列表 ----------
@@ -106,6 +136,7 @@
     state.essays = await api("/api/essays");
     if (state.currentId && !state.essays.some((x) => x.id === state.currentId)) state.currentId = null;
     renderList();
+    if (state.nav === "grade") renderGradeEmpty();
     if (state.nav === "records") renderRecords();
   }
 
@@ -144,7 +175,6 @@
     catch (e) { toast("加载失败：" + e.message); return; }
     renderGradeView();
   }
-
   function essayRow() { return state.detail ? state.detail.essay : null; }
   function sentences() { return (state.detail && state.detail.sentences) || []; }
 
@@ -172,7 +202,7 @@
   // ---------- 工作台视图 ----------
   function renderGradeView() {
     const e = essayRow();
-    if (!e) { $("#view-grade").innerHTML = '<div class="view-area"><div class="empty">请选择一篇作文开始批阅</div></div>'; return; }
+    if (!e) { renderGradeEmpty(); return; }
     state.selectedCorrectTemplate = state.selectedCorrectTemplate || defaultTemplateId();
     const canWork = state.settings && state.settings.stepFun && state.settings.stepFun.hasKey;
     const grading = state.detail.grading;
@@ -519,5 +549,7 @@
 
   function esc(v) { return escapeHtml(v); }
 
-  window.addEventListener("DOMContentLoaded", init);
+  window.addEventListener("DOMContentLoaded", () => init());
+  // 双重保险：若 DOMContentLoaded 已触发（脚本在 load 后才执行），立即执行
+  if (document.readyState !== "loading") init();
 })();
