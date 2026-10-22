@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' app-media: data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'" />
+  <title>语文作文批改助手</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <header class="titlebar" id="titlebar">
+    <div class="titlebar-title">
+      <span class="titlebar-dot" id="titlebar-dot"></span>
+      <span>语文作文批改助手</span>
+      <span style="opacity:.45">·</span>
+      <b id="win-title">批改台</b>
+    </div>
+    <div style="margin-left:auto" class="titlebar-title">
+      <span id="engine-status" class="engine-status" data-state="idle">引擎启动中…</span>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">文</div>
+        <div>
+          <div class="brand-name">作文批改助手</div>
+          <div class="brand-sub">看图 · 校对 · 批阅</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav"></nav>
+    </aside>
+    <main class="main" id="view"></main>
+  </div>
+
+  <div id="toasts" class="toast-stack"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
