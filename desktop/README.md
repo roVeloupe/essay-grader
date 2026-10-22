@@ -1,134 +1,134 @@
-# 语文作文批改助手（桌面版）
+# Essay Grader (desktop)
 
-把学生作文拍成照片，自动完成 **识别 → 校对 → 按标准批阅 → 导出**。
-面向初高中语文老师，Windows 桌面应用，**不需要 API Key、不需要注册、不花钱**。
+Photograph a student essay and the app takes it through **recognition → review → rubric-based grading → export** automatically.
+A Windows desktop app for middle- and high-school Chinese-language teachers: **no API key, no sign-up, no cost**.
 
 ---
 
-## 一、安装
+## 1. Installation
 
-1. 双击 `语文作文批改助手-2.0.0-安装包.exe`。
-2. 选择安装位置（默认装在当前用户目录，不需要管理员权限）。
-3. 安装完成后桌面会出现「语文作文批改助手」图标，双击即可使用。
+1. Double-click `essay-grader-setup-2.0.0.exe`.
+2. Choose an install location (the default is the current user's profile; no administrator rights needed).
+3. When installation finishes, an "Essay Grader" icon appears on the desktop — double-click it to start.
 
-> 安装包约 120 MB，其中 60 MB 是内嵌的 OpenCode 引擎（免费模型的运行载体），
-> 装在机械硬盘的轻薄本上首次启动约 5–15 秒属于正常。
+> The installer is about 120 MB, of which 60 MB is the embedded OpenCode engine (the runtime the free models go through).
+> A first launch taking about 5–15 seconds on a thin laptop with a spinning disk is normal.
 
-## 二、第一次使用（三步）
+## 2. First run (three steps)
 
-1. **导入**：把作文照片拖进窗口，或点右上角「导入图片」。
-   同一篇作文的多页请**一次选完**，系统会按文件名顺序合并成一篇。
-   支持 `jpg / jpeg / png / bmp / webp`。
-2. **开始批改**：点「开始批改」。右上角状态变成「**引擎就绪 · 10000**」表示本机引擎已启动，
-   之后每篇大约 **30–60 秒**（识别 8s + 校对 5s + 批阅 20–40s，取决于免费模型当时的排队情况）。
-3. **看结果 / 导出**：批改完点这一行进入结果页，右上角可「导出 Word / Markdown」，
-   批改台右上角「导出全部」可一次导出多篇。
+1. **Import**: drag essay photos into the window, or click "Import images" in the top-right corner.
+   Select all pages of the same essay **in one go**; the app merges them into a single essay in filename order.
+   Supports `jpg / jpeg / png / bmp / webp`.
+2. **Start grading**: click "Start grading". When the status in the top-right corner becomes "**Engine ready · 10000**", the local engine is up,
+   and each essay then takes about **30–60 seconds** (recognition 8s + review 5s + grading 20–40s, depending on how busy the free models are at the time).
+3. **Review and export**: when grading finishes, click the row to open the result page, where you can "Export Word / Markdown";
+   "Export all" in the top-right corner of the grading desk exports several essays at once.
 
-## 三、批改前先核对一遍原文（重要）
+## 3. Check the text before grading (important)
 
-点行内「**校对**」进入「识别与校对」页：
+Click "**Review**" on a row to open the "Recognition and review" page:
 
-- 左边是原图，右边是逐句识别结果，可以直接点句子改字，改完自动保存。
-- 标成 **学生笔误** 的句子，表示学生原稿这里就写错了（例如「玩要」→「玩耍」）。
-  系统**只记录、不改正文**，正文保留孩子的原字，导出时会进「学生笔误清单」。
-- 标成 **待核对** 的句子，表示字迹模糊、识别没把握，建议对着原图看一眼再点「已核对」。
+- The original image is on the left and the sentence-by-sentence result on the right; click a sentence to correct a character and it saves automatically.
+- Sentences marked **student slip** mean the student's own page was already wrong there (for example `teh` → `the`).
+  The app **records it without rewriting the body text**, keeps the child's original characters, and puts it in the "Student slips" list on export.
+- Sentences marked **needs verification** mean the handwriting was unclear and recognition is not confident; check them against the original image and then click "Verified".
 
-确认无误后点右上角「**按当前文本批阅**」，结果会覆盖旧成绩。
+Once everything looks right, click "**Grade current text**" in the top-right corner; the result overwrites the previous score.
 
-## 四、评分标准
+## 4. Rubrics
 
-侧栏「评分标准」里内置两套：
+The "Rubrics" page in the sidebar ships with two built-in templates:
 
-| 模板 | 学段 | 总分 | 维度 |
+| Template | Level | Total | Dimensions |
 | --- | --- | --- | --- |
-| 初中记叙文 | 初中 | 50 | 内容 20 / 结构 10 / 语言 15 / 书写 5 |
-| 高中议论文 | 高中 | 60 | 立意 20 / 论证 20 / 结构 10 / 语言 10 |
+| Middle-school narrative | Middle school | 50 | Content 20 / Structure 10 / Language 15 / Handwriting 5 |
+| High-school argumentative | High school | 60 | Thesis 20 / Argument 20 / Structure 10 / Language 10 |
 
-可以复制内置模板改成自己学校的标准（维度名称、分值、评分要点、等级线都能改）。
-改完在「设置 → 默认评分标准」里选它，新导入的作文就用这套。
+You can duplicate a built-in template and adapt it to your school's standard (dimension names, point values, scoring criteria, and grade thresholds are all editable).
+Then pick it under "Settings → Default rubric" and newly imported essays will use it.
 
-## 五、免费额度与限流
+## 5. Free tier and rate limits
 
-- 用的是 **OpenCode Zen 免费模型**（默认 `DeepSeek V4.1 Flash`），不消耗任何付费额度。
-- 免费通道有**频率限制**：连续批改时偶尔会等上 1–3 分钟，或出现「模型没有返回 JSON」这类超时提示。
-  遇到时**过一会儿点「重批」**即可，已识别校对的内容不会丢。
-- 「设置 → 同时批改篇数」建议保持 **1**。调大更容易被限流，反而更慢。
+- It runs on **OpenCode Zen free models** (default `DeepSeek V4.1 Flash`) and consumes no paid quota.
+- The free tier is **rate limited**: back-to-back grading sometimes waits 1–3 minutes, or throws a timeout-style message such as "the model did not return JSON".
+  When that happens, **wait a moment and press "Regrade"**; recognised and reviewed content is not lost.
+- Keep "essays graded at once" under "Settings" at **1**. Raising it makes rate limiting more likely and ends up slower.
 
-## 六、文件都在哪
+## 6. Where the files are
 
-| 内容 | 位置 |
+| Content | Location |
 | --- | --- |
-| 导出的作文 | 默认 `文档\作文批改`（设置里可改，点「选择」换目录） |
-| 作文数据与照片 | `%APPDATA%\essay-grader\`（`store.json` + `papers\`） |
-| 引擎日志 | `%APPDATA%\essay-grader\engine.log`、`backend.log` |
-| 引擎数据（隔离） | `%APPDATA%\essay-grader\opencode\` |
+| Exported essays | `Documents\Essay Grading` by default (changeable in settings; click "Choose" to pick another directory) |
+| Essay data and photos | `%APPDATA%\essay-grader\` (`store.json` + `papers\`) |
+| Engine logs | `%APPDATA%\essay-grader\engine.log`, `backend.log` |
+| Engine data (isolated) | `%APPDATA%\essay-grader\opencode\` |
 
-卸载不会删除 `%APPDATA%\essay-grader`，重装后作文还在；要彻底清除需手动删这个文件夹。
+Uninstalling does not delete `%APPDATA%\essay-grader`, so essays survive a reinstall; delete that folder by hand to remove everything.
 
-## 七、常见问题
+## 7. FAQ
 
-**1. 右上角一直显示「引擎启动中…」**
-等 30 秒；仍然不动就关掉重开一次。还是不行，看 `%APPDATA%\essay-grader\engine.log`：
+**1. The top-right corner stays on "Starting engine…"**
+Wait 30 seconds; if it still has not moved, close and reopen the app. If that does not help, look at `%APPDATA%\essay-grader\engine.log`:
 
-- `缺少 opencode2api 组件` / `缺少 opencode 引擎` → 安装不完整，重新安装。
-- `后端异常退出（1）` → 大概率是杀毒软件拦了 `resources\bin\opencode.exe`，把它加入白名单。
+- `missing opencode2api component` / `missing opencode engine` → the install is incomplete; reinstall.
+- `backend exited abnormally (1)` → most likely antivirus blocked `resources\bin\opencode.exe`; allowlist it.
 
-**2. 提示「无法连接本机引擎（10000 端口被占用）」**
-多半是上一次没退干净。任务管理器结束「语文作文批改助手.exe」与「opencode.exe」后重开；
-应用本身也会自动改用 10001、10002 等空闲端口。
+**2. It says "Cannot connect to the local engine (port 10000 is in use)"**
+Usually the previous run did not exit cleanly. End `Essay Grader.exe` and `opencode.exe` in Task Manager, then start again;
+the app also falls back to free ports such as 10001 and 10002 by itself.
 
-**3. 「模型没有返回 JSON」**
-免费模型偶尔会输出一段散文而不是 JSON，程序会自动重试 3 次；仍失败就点「重批」。
+**3. "The model did not return JSON"**
+Free models occasionally write prose instead of JSON; the app retries 3 times automatically, and if that still fails, press "Regrade".
 
-**4. 识别不准 / 把学生的错字改掉了**
-先到「校对」页对照原图改一次，再「按当前文本批阅」。
-拍照时尽量**正对、光线均匀、字迹占画面 70% 以上**，识别准确率会明显提高。
+**4. Inaccurate recognition / student slips getting corrected**
+First correct it once against the original image on the "Review" page, then use "Grade current text".
+When taking the photo, keep it **straight on, evenly lit, with the handwriting filling 70%+ of the frame** — accuracy improves noticeably.
 
-**5. Word 导出后想调整格式**
-导出的 `.docx` 是标准 A4 文档（微软雅黑），可以直接在 Word 里改页边距、加校徽、打印。
+**5. Adjusting the format after a Word export**
+The exported `.docx` is a standard A4 document (Microsoft YaHei), so you can change margins, add a school crest, and print straight from Word.
 
-## 八、从源码运行（开发用）
+## 8. Running from source (development)
 
 ```bash
-# 依赖
-npm install                     # 会装 electron 与 docx
-node node_modules/electron/install.js   # npm 11 拦了 install script 时手动补
+# Dependencies
+npm install                     # installs electron and docx
+node node_modules/electron/install.js   # do this by hand when npm 11 blocks install scripts
 
-# 后端（本机代理 + OpenCode 引擎）
-# 需要把 opencode2api 放在 ../opencode2api，把 opencode.exe 放在 ../bin/
-npm start                       # 开发模式（带控制台日志）
+# Backend (local proxy + OpenCode engine)
+# opencode2api must be at ../opencode2api and opencode.exe at ../bin/
+npm start                       # dev mode (with console logs)
 ```
 
-打包：
+Packaging:
 
 ```bash
 $env:ELECTRON_MIRROR="https://npmmirror.com/mirrors/electron/"
 $env:ELECTRON_BUILDER_BINARIES_MIRROR="https://npmmirror.com/mirrors/electron-builder-binaries/"
-npm run pack    # 只出 win-unpacked（快速验证）
-npm run dist    # 出 NSIS 安装包
+npm run pack    # win-unpacked only (quick verification)
+npm run dist    # NSIS installer
 ```
 
-打包时 `build/afterPack.cjs` 会把 `opencode2api`（含 `node_modules`）整目录复制进
-`resources\backend\opencode2api`——`extraResources` 默认不复制 `node_modules`，这是必须的补丁。
+When packaging, `build/afterPack.cjs` copies the whole `opencode2api` directory (including `node_modules`) into
+`resources\backend\opencode2api` — `extraResources` does not copy `node_modules` by default, so this patch is required.
 
-## 九、技术结构
+## 9. Technical structure
 
 ```
 electron/
-  main.js       主进程：窗口、IPC、导出、协议 app-media
-  backend.js    拉起内嵌引擎（opencode2api + opencode.exe，隔离 XDG 数据目录）
-  ai.js         三段调用：OCR / 校对 / 批阅，含 JSON 提取与笔误确定性兜底
-  prompts.js    三段提示词（识别保真、校对四态、批阅引用原文）
-  runner.js     队列与阶段编排，进度事件
-  store.js      JSON 存储 + 内置评分模板
-  export.js     Markdown / Word（docx）/ PDF
-renderer/       零构建 ES Module 前端（批改台 / 校对 / 结果 / 模板 / 设置）
+  main.js       main process: window, IPC, export, the app-media protocol
+  backend.js    starts the embedded engine (opencode2api + opencode.exe, isolated XDG data directories)
+  ai.js         the three calls (OCR / review / grading), with JSON extraction and the deterministic slip safety net
+  prompts.js    the three prompts (faithful recognition, four-state review, grading that quotes the essay)
+  runner.js     queue and stage orchestration, progress events
+  store.js      JSON storage + built-in rubric templates
+  export.js     Markdown / Word (docx) / PDF
+renderer/       build-free ES Module front end (grading desk / review / result / templates / settings)
 ```
 
-数据流：
-`图片 → base64 → 多模态识别（逐句 + 置信度）→ 纯文本校对（ok/ocr_fix/author_error/verify）→ 按模板评分 → 导出`
+Data flow:
+`image → base64 → multimodal recognition (per sentence + confidence) → plain-text review (ok/ocr_fix/author_error/verify) → rubric scoring → export`
 
-## 十、隐私
+## 10. Privacy
 
-所有请求都在本机发起：作文照片只发给你自己的 `127.0.0.1` 引擎，再经 OpenCode 免费通道转发给模型。
-应用不收集任何统计信息，也不上传作文到本项目的服务器（本项目没有服务器）。
+Every request originates on your own machine: essay photos go only to your local `127.0.0.1` engine, which forwards them to the model through the OpenCode free tier.
+The app collects no analytics and never uploads essays to a server run by this project (this project has no servers).

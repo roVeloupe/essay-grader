@@ -1,22 +1,22 @@
-## 这个 PR 做了什么
+## What this PR does
 
-<!-- 一句话说完；关联 issue 用 "Closes #12" -->
+<!-- One sentence; link issues with "Closes #12" -->
 
-## 改动范围
+## Scope
 
-- [ ] desktop/electron（主进程 / 引擎 / 提示词 / 调用）
-- [ ] desktop/renderer（界面）
+- [ ] desktop/electron (main process / engine / prompts / API calls)
+- [ ] desktop/renderer (UI)
 - [ ] docs / README
 - [ ] build / CI
 
-## 自检
+## Self-check
 
-- [ ] `node --check` 通过所有改动的 js 文件
-- [ ] 开发模式 `npm start` 能起来，引擎显示「引擎就绪」
-- [ ] 至少跑通一篇：导入 → 批改 → 结果 → 导出
-- [ ] 如果改了提示词：在 `docs/PROMPTS.md` 补了实测对比
-- [ ] 如果改了打包相关：`npm run pack` 后 `win-unpacked` 能启动
+- [ ] `node --check` passes on every changed js file
+- [ ] `npm start` comes up in dev mode and the app shows "Engine ready"
+- [ ] At least one essay went end to end: import → grade → result → export
+- [ ] If prompts changed: a measured comparison was added to `docs/PROMPTS.md`
+- [ ] If packaging changed: `npm run pack` followed by a successful `win-unpacked` launch
 
-## 截图 / 日志
+## Screenshots / logs
 
-<!-- 界面改动请贴图；引擎相关请贴 engine.log 片段（脱敏） -->
+<!-- Attach images for UI changes; attach a redacted engine.log excerpt for engine work -->

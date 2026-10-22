@@ -1,29 +1,29 @@
-# 安全说明
+# Security
 
-## 数据流向
+## Data flow
 
-| 数据 | 去向 | 说明 |
+| Data | Destination | Notes |
 | --- | --- | --- |
-| 作文照片 | 本机 `127.0.0.1` 引擎 → OpenCode 免费通道 → 模型 | 不经过本项目的任何服务器（本项目没有服务器） |
-| 识别结果、分数、导出文件 | 本机 `%APPDATA%\essay-grader` 与导出目录 | 纯本地 |
-| 崩溃日志 | 不收集 | 应用不上报任何统计 |
+| Essay photos | Local `127.0.0.1` engine → OpenCode free tier → model | Never touches a server run by this project (this project has no servers) |
+| Recognition results, scores, exported files | Local `%APPDATA%\essay-grader` and the export directory | Purely local |
+| Crash logs | Not collected | The app reports no analytics of any kind |
 
-卸载不会删除 `%APPDATA%\essay-grader`；如需彻底清除请手动删除该目录。
+Uninstalling does not delete `%APPDATA%\essay-grader`; delete that directory by hand if you want it gone completely.
 
-## 密钥
+## Keys
 
-本应用**不使用也不需要 API Key**。若你自行改造接入付费模型，请把密钥放在环境变量或
-`%APPDATA%\essay-grader\store.json` 之外的配置里，**不要提交进仓库**。
+This app **does not use and does not need an API key**. If you modify it to call a paid model, keep the key in an environment variable or in configuration outside
+`%APPDATA%\essay-grader\store.json` — **never commit it to the repository**.
 
-## 报告漏洞
+## Reporting a vulnerability
 
-请通过仓库的 Security → Report a vulnerability 私密上报，或开 issue 时不要贴利用细节。
-常见问题（路径穿越、`app-media` 协议越权读取）属于重点关注范围：
+Please report privately through the repository's Security → Report a vulnerability, or simply leave exploitation details out when you open an issue.
+Path traversal and privilege abuse in the `app-media` protocol are in scope:
 
-- `app-media://` 只允许映射 `%APPDATA%\essay-grader\papers` 下的文件，实现里做了前缀校验。
-- 渲染层 CSP 为 `default-src 'self'; img-src 'self' app-media: data: blob:`，未开启 `unsafe-eval`。
+- `app-media://` may only map files under `%APPDATA%\essay-grader\papers`; the implementation validates the prefix.
+- The renderer CSP is `default-src 'self'; img-src 'self' app-media: data: blob:` and does not enable `unsafe-eval`.
 
-## 依赖
+## Dependencies
 
-`opencode2api` 与 `opencode.exe` 为第三方组件，分别遵循其上游许可证；
-本项目只做打包集成，未修改其源码逻辑。
+`opencode2api` and `opencode.exe` are third-party components and remain under their respective upstream licenses;
+this project only packages and integrates them and has not modified their source logic.

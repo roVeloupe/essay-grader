@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 要构建的版本号（仅用于命名产物）
+        description: Version to build (used only to name the artifacts)
         required: true
         default: '2.0.0'
 
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   build-windows:
-    name: 构建 Windows 安装包
+    name: Build the Windows installer
     runs-on: windows-latest
     timeout-minutes: 40
     steps:
@@ -25,19 +25,19 @@ jobs:
         with:
           node-version: 20
 
-      # 引擎二进制：opencode-ai 包内自带 opencode.exe（180 MB），不入库
-      - name: 准备 opencode 引擎
+      # Engine binary: the opencode-ai package ships opencode.exe (180 MB), so it is not committed
+      - name: Prepare the opencode engine
         shell: pwsh
         run: |
           npm install -g opencode-ai@1.19.0 --foreground-scripts
           $src = Join-Path (npm root -g) 'opencode-ai\bin\opencode.exe'
-          if (-not (Test-Path $src)) { throw "opencode.exe 未找到：$src" }
+          if (-not (Test-Path $src)) { throw "opencode.exe not found: $src" }
           New-Item -ItemType Directory -Force -Path bin | Out-Null
           Copy-Item $src bin\opencode.exe
           (Get-Item bin\opencode.exe).Length
 
-      # 代理：第三方组件，按 pin 的 commit 拉取
-      - name: 准备 opencode2api 代理
+      # Proxy: third-party component, pulled at the pinned commit
+      - name: Prepare the opencode2api proxy
         shell: pwsh
         run: |
           git clone --depth 1 https://github.com/TiaraBasori/opencode2api.git opencode2api
@@ -46,7 +46,7 @@ jobs:
           Pop-Location
           Get-ChildItem opencode2api/src | Select-Object Name
 
-      - name: 安装应用依赖
+      - name: Install app dependencies
         shell: pwsh
         working-directory: desktop
         run: |
@@ -55,12 +55,12 @@ jobs:
             node node_modules\electron\install.js
           }
 
-      - name: 打包 NSIS
+      - name: Package with NSIS
         shell: pwsh
         working-directory: desktop
         run: npm run dist
 
-      - name: 记录 SHA256
+      - name: Record SHA256
         shell: pwsh
         run: |
           $f = Get-ChildItem desktop/dist/*.exe | Select-Object -First 1
@@ -76,7 +76,7 @@ jobs:
             sha.txt
           retention-days: 7
 
-      - name: 上传到 Release
+      - name: Upload to the release
         if: startsWith(github.ref, 'refs/tags/')
         shell: pwsh
         env:
@@ -86,7 +86,7 @@ jobs:
           $exe = (Get-ChildItem desktop/dist/*.exe | Select-Object -First 1).FullName
           gh release view $tag 2>$null
           if ($LASTEXITCODE -ne 0) {
-            gh release create $tag --title "语文作文批改助手 $tag" --notes-file CHANGELOG.md
+            gh release create $tag --title "Essay Grader $tag" --notes-file CHANGELOG.md
           }
           gh release upload $tag $exe --clobber
           Get-Content sha.txt

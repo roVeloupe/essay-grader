@@ -1,5 +1,5 @@
 {
-  "_comment": "opencode2api 配置样例，复制到 opencode2api/config.json。这些字段在 2.5.0 上实测可用。",
+  "_comment": "Sample opencode2api configuration; copy it to opencode2api/config.json. These fields are verified to work on 2.5.0.",
 
   "PORT": 10000,
   "BIND_HOST": "127.0.0.1",

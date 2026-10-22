@@ -1,47 +1,47 @@
-# 贡献指南
+# Contributing
 
-## 环境
+## Environment
 
-- Node.js ≥ 20（开发用 24 实测）
-- Windows 10/11 x64（本项目只面向 Windows 桌面）
-- 代理可选，仅打包时需要拉 electron 镜像
+- Node.js ≥ 20 (developed and tested on 24)
+- Windows 10/11 x64 (this project targets the Windows desktop only)
+- A proxy is optional; you only need one to pull the Electron mirror when packaging
 
-## 本地跑起来
+## Running it locally
 
 ```powershell
 cd desktop
 npm install
-node node_modules\electron\install.js   # npm 11 拦截 install script 时手动补
+node node_modules\electron\install.js   # do this by hand when npm 11 blocks install scripts
 
-# 引擎依赖（二选一）
-#  A. 自动准备
+# Engine dependencies (pick one)
+#  A. Automatic
 powershell -ExecutionPolicy Bypass -File ..\tools\setup-backend.ps1
-#  B. 手动：clone opencode2api 到 essay-grader-rework\opencode2api，
-#     下载 opencode.exe 放到 essay-grader-rework\bin\opencode.exe
+#  B. Manual: clone opencode2api into essay-grader-rework\opencode2api,
+#     and download opencode.exe to essay-grader-rework\bin\opencode.exe
 
 $env:PATH = 'C:\Program Files\nodejs;' + $env:PATH
 npm start
 ```
 
-首次启动会在 `%APPDATA%\essay-grader\` 建数据目录，并拉起内嵌引擎（端口 10000 起）。
+The first launch creates a data directory under `%APPDATA%\essay-grader\` and starts the embedded engine (ports from 10000 up).
 
-## 代码约定
+## Code conventions
 
-- 主进程一律 CommonJS（`'use strict'`），渲染层一律 ES Module，**不引入构建工具**。
-- 渲染层禁止 `innerHTML` 拼接用户内容，统一用 `js/util.js` 的 `h()` 构造 DOM。
-- 任何"正确性依赖模型自觉"的逻辑都要有代码兜底（见 `ai.js` 的 `onlyHanSubstitutions`）。
-- 提示词改动必须在 `docs/PROMPTS.md` 里同步"为什么这样改"和实测结果。
+- The main process is CommonJS throughout (`'use strict'`); the renderer is ES Modules throughout — **no build tooling**.
+- The renderer must not assemble user content with `innerHTML`; build DOM through `h()` in `js/util.js`.
+- Any logic whose correctness depends on the model behaving itself needs a code-level safety net (see `onlyHanSubstitutions` in `ai.js`).
+- Prompt changes must come with "why it changed" and measured results in `docs/PROMPTS.md`.
 
-## 提交信息
+## Commit messages
 
-`type(scope): 说明`，type 取 `feat|fix|docs|build|ci|refactor|test|chore`。
-修 bug 请在正文写清「现象 → 根因 → 验证方式」，方便对照 issue。
+`type(scope): subject`, where type is one of `feat|fix|docs|build|ci|refactor|test|chore`.
+For bug fixes, spell out "symptom → root cause → how it was verified" in the body so it lines up with the issue.
 
-## 提 issue
+## Opening an issue
 
-- 用模板，附上 `%APPDATA%\essay-grader\engine.log` 的相关片段（**注意脱敏路径**）。
-- 涉及识别质量的问题请附一张脱敏后的作文图，否则无法复现。
+- Use the template, and include the relevant excerpt from `%APPDATA%\essay-grader\engine.log` (**redact personal paths**).
+- For recognition-quality problems, attach a redacted photo of the essay; without one the issue cannot be reproduced.
 
-## 发布
+## Releasing
 
-见 [`docs/PACKAGING.md`](PACKAGING.md) 第六节。
+See section 6 of [`docs/PACKAGING.md`](PACKAGING.md).

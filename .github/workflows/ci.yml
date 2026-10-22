@@ -10,7 +10,7 @@ on:
 
 jobs:
   syntax:
-    name: 语法与配置检查
+    name: Syntax and configuration checks
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: 主进程语法检查
+      - name: Main-process syntax check
         shell: pwsh
         run: |
           $fail = 0
@@ -29,7 +29,7 @@ jobs:
           }
           if ($fail -eq 1) { exit 1 }
 
-      - name: 渲染层语法检查（ESM）
+      - name: Renderer syntax check (ESM)
         shell: pwsh
         run: |
           $fail = 0
@@ -43,7 +43,7 @@ jobs:
           }
           if ($fail -eq 1) { exit 1 }
 
-      - name: package.json 可解析且字段齐全
+      - name: package.json parses and has all required fields
         shell: pwsh
         run: |
           $p = Get-Content desktop/package.json -Raw | ConvertFrom-Json
@@ -53,15 +53,15 @@ jobs:
           if (-not $p.build.extraResources) { Write-Host 'missing extraResources'; exit 1 }
           Write-Host "ok $($p.name)@$($p.version)"
 
-      - name: 提示词关键约束未被删掉（防止回退）
+      - name: Prompt invariants still present (regression guard)
         shell: pwsh
         run: |
           $src = Get-Content desktop/electron/prompts.js -Raw
           foreach ($needle in 'author_error','ocr_fix','verify','□') {
-            if ($src -notmatch [regex]::Escape($needle)) { Write-Host "prompts.js 缺少 $needle"; exit 1 }
+            if ($src -notmatch [regex]::Escape($needle)) { Write-Host "prompts.js is missing $needle"; exit 1 }
           }
           $ai = Get-Content desktop/electron/ai.js -Raw
           if ($ai -notmatch 'onlyHanSubstitutions') {
-            Write-Host 'ai.js 缺少 onlyHanSubstitutions 兜底'; exit 1
+            Write-Host 'ai.js is missing the onlyHanSubstitutions safety net'; exit 1
           }
           Write-Host 'prompt guards ok'

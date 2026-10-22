@@ -1,60 +1,60 @@
-name: Bug 报告
-description: 功能异常、报错、界面问题
+name: Bug report
+description: Broken behaviour, errors, or UI problems
 title: "[bug] "
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        提之前先看一遍 [docs/TROUBLESHOOTING.md](../blob/main/docs/TROUBLESHOOTING.md)，
-        常见问题大多在那里有现成解法。
+        Before filing, skim [docs/TROUBLESHOOTING.md](../blob/main/docs/TROUBLESHOOTING.md) —
+        most common problems already have a ready answer there.
   - type: input
     id: version
     attributes:
-      label: 版本
-      description: 安装包版本，或 `git rev-parse --short HEAD`
+      label: Version
+      description: Installer version, or `git rev-parse --short HEAD`
       placeholder: 2.0.0
     validations:
       required: true
   - type: dropdown
     id: area
     attributes:
-      label: 出问题的环节
+      label: Where it broke
       options:
-        - 安装 / 启动
-        - 引擎（一直「启动中」）
-        - 导入图片
-        - 识别（OCR）
-        - 校对 / 笔误判定
-        - 批阅分数或建议
-        - 导出（Word / PDF / Markdown）
-        - 界面与交互
+        - Install / startup
+        - Engine (stuck on "starting")
+        - Importing images
+        - Recognition (OCR)
+        - Review / typo classification
+        - Grading scores or feedback
+        - Export (Word / PDF / Markdown)
+        - UI and interaction
     validations:
       required: true
   - type: textarea
     id: what
     attributes:
-      label: 现象
-      description: 你做了什么、看到了什么、期望是什么
-      placeholder: 导入 3 页作文后点开始批改，状态停在「识别中」不动
+      label: What happened
+      description: What you did, what you saw, and what you expected
+      placeholder: After importing a 3-page essay I clicked Start grading and the status stayed on "recognising"
     validations:
       required: true
   - type: textarea
     id: logs
     attributes:
-      label: 日志
+      label: Logs
       description: |
-        `%APPDATA%\essay-grader\engine.log` 或 `backend.log` 的末尾片段。
-        **请删掉包含个人信息的路径**。
+        The tail of `%APPDATA%\essay-grader\engine.log` or `backend.log`.
+        **Please strip any paths that identify you**.
       render: text
     validations:
       required: false
   - type: textarea
     id: env
     attributes:
-      label: 环境
+      label: Environment
       placeholder: |
-        Windows 11 23H2 / 8 GB 内存 / 10 代 i5
-        安装包 2.0.0，模型 DeepSeek V4.1 Flash（默认）
+        Windows 11 23H2 / 8 GB RAM / 10th-gen i5
+        Installer 2.0.0, model DeepSeek V4.1 Flash (default)
     validations:
       required: false

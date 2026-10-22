@@ -1,35 +1,35 @@
-# 提示词设计
+# Prompt design
 
-三段提示词分别对抗三种失败模式。位置：`desktop/electron/prompts.js`。
+Three prompts, each countering a different failure mode. Location: `desktop/electron/prompts.js`.
 
 ---
 
-## 一、识别：禁止“顺手改错”
+## 1. Recognition: no "helpful fixing"
 
-视觉模型默认会做“语言模型该做的事”——看到「玩要」就输出「玩耍」。对作文批改来说这是灾难：
-老师要批的就是那个错字，模型替学生改掉，整条链路就失去意义。
+A vision model does by default what a language model is trained to do — it sees a misspelling and outputs the correct spelling instead. For essay grading that is a disaster:
+the very slip the teacher needs to mark is the one the model repairs, and with that the whole pipeline loses its point.
 
-`RECOGNIZE_SYSTEM`：
+`RECOGNIZE_SYSTEM`:
 
-- 只做逐字转录，**禁止**修改错别字、补全漏字、调整语序、润色句子、规范标点、口语转书面语；
-- 作者的错别字必须原样保留（原文「玩要」就输出「玩要」）；
-- 无法辨认用 `□` 占位，并给该句 `need_verify: true`。
+- Transcribe only, character by character; **do not** fix misspellings, fill in missing characters, reorder words, polish sentences, normalise punctuation, or turn colloquial phrasing into written prose;
+- The author's misspellings must survive verbatim (if the page says it that way, output it that way);
+- Use `□` for anything illegible and set `need_verify: true` on that sentence.
 
-用户侧加两组**正误对照** few-shot：
+The user message adds two **correct/incorrect** few-shot pairs:
 
 ```
-· 原稿「我们在山上玩要」→ 输出「我们在山上玩要」，不是「玩耍」；
-· 原稿「心里冲满温暖」→ 输出「心里冲满温暖」，不是「充满」。
-这些字看起来像写错了，但那正是老师要批的地方，改掉就等于替学生改卷。
+· Page says "teh" → output "teh", not "the";
+· Page says "adn" → output "adn", not "and".
+These look like mistakes, but they are exactly what the teacher is marking. Repairing them means grading on the student's behalf.
 ```
 
-输出结构（段落 → 句子）：
+Output shape (paragraphs → sentences):
 
 ```json
 {
   "page": 1,
-  "title": {"text": "故乡的秋天", "confidence": 0.99},
-  "author": {"text": "李明", "confidence": 0.94},
+  "title": {"text": "Autumn in My Hometown", "confidence": 0.99},
+  "author": {"text": "Li Ming", "confidence": 0.94},
   "paragraphs": [
     {"index": 1, "sentences": [{"id": "p1s1", "text": "…", "confidence": 0.96, "need_verify": false}]}
   ],
@@ -37,113 +37,114 @@
 }
 ```
 
-切句规则写死在提示词里：句号 / 问号 / 叹号 / 省略号为界，分号逗号不切；被换行打断的同一句要合并；段落按原文分。
+Sentence splitting is pinned down in the prompt: split on full stops / question marks / exclamation marks / ellipses, never on semicolons or commas; merge a sentence broken by a line wrap; keep paragraphs as they appear on the page.
 
 ---
 
-## 二、校对：把“机器错”和“学生错”分开
+## 2. Review: separating "machine errors" from "student errors"
 
-这一步是旧版完全没有的，也是本项目的核心增量。
-纯文本阶段的模型有一个强烈先验：既然给你的是文字，任何“读不通”的字都该归因于 OCR。
-于是「冲满温暖」会被判成 `ocr_fix`，正文被改成「充满」——学生笔误整条消失。
+This step did not exist in the old version at all, and it is the core addition in this project.
+At the plain-text stage the model carries a strong prior: since it was handed text, anything that "doesn't read right" must be an OCR problem.
+So a misspelling is classified `ocr_fix`, the body text is rewritten to the correct word, and the student's error disappears entirely.
 
-`CORRECT_SYSTEM` 用**优先级判定**硬掰过来（先命中先算）：
+`CORRECT_SYSTEM` forces the decision with a **priority order** (first match wins):
 
-| 顺序 | verdict | 含义 | 对 text 的要求 |
+| Order | verdict | Meaning | Requirement on `text` |
 | --- | --- | --- | --- |
-| 1 | `verify` | 字迹模糊、句子断裂，无法确定原文 | 可空 |
-| 2 | `author_error` | 句子读得通，但某个字词用错（同音、形近、搭配不当） | **必须与原文完全一致**，问题写进 `issues` |
-| 3 | `ocr_fix` | 只有字符层面坏了：乱码、叠字、缺笔画不成字、标点变怪符号 | 给出修正后的句子 |
-| 4 | `ok` | 没问题 | 原文 |
+| 1 | `verify` | Illegible handwriting, broken sentence, source text undeterminable | May be empty |
+| 2 | `author_error` | The sentence reads fine, but a character or word is wrong (homophone, similar shape, wrong collocation) | **Must match the source exactly**; describe the problem in `issues` |
+| 3 | `ocr_fix` | Only the characters are broken: garbage, doubled glyphs, missing strokes that form no character, punctuation turned into odd symbols | Return the corrected sentence |
+| 4 | `ok` | No problem | The source text |
 
-并明确写了一句取舍：
+It also states the trade-off explicitly:
 
-> 「学生可能写错了」与「识别错了」难以区分时，一律按 `author_error` 处理，
-> 宁可让老师多看一眼，也不要悄悄改掉孩子的错字。
+> When "the student may have written it wrong" and "it was recognised wrong" cannot be told apart, always choose `author_error`:
+> better that the teacher takes a second look than the app quietly fixes a child's slip.
 
-输出：
+Output:
 
 ```json
 {"sentences": [{
   "id": "p2s1",
   "verdict": "author_error",
-  "text": "记得小时候，我常常和小伙伴们一起到山上去玩要。",
-  "issues": [{"wrong": "玩要", "right": "玩耍", "kind": "错别字", "reason": "“耍”误写成“要”。"}],
+  "text": "I remember when I was little, I used to go up the hill with my friends.",
+  "issues": [{"wrong": "teh", "right": "the", "kind": "misspelling", "reason": "\"the\" was written as \"teh\"."}],
   "need_verify": false
 }]}
 ```
 
-硬要求：每个输入 id 出现且仅出现一次、顺序不变、不合并不拆分句子、`issues` 只在 `ocr_fix` / `author_error` 时非空。
+Hard requirements: every input id appears exactly once and in the same order; sentences are neither merged nor split; `issues` is non-empty only for `ocr_fix` / `author_error`.
 
 ---
 
-## 三、批阅：引用原文，不许空泛
+## 3. Grading: quote the essay, no empty generalities
 
-`GRADE_SYSTEM` 把模型钉在“二十年经验的初高中语文老师”这个角色上，并给三条硬约束：
+`GRADE_SYSTEM` pins the model to the role of "a Chinese-language teacher with twenty years of experience" and imposes three hard constraints:
 
-- 就文论文、**引用原文**、指出具体段落句子；
-- 禁止空泛套话（“多读书”“多观察生活”）、禁止编造原文没有的内容；
-- 先定等级，再在等级区间内给分，**各维度分之和等于总分**。
+- Judge this essay on its own terms, **quoting the source** and pointing to specific paragraphs and sentences;
+- No vague filler ("read more books", "observe life more"), and no inventing content that is not in the essay;
+- Decide the level first, then score within that level's band, and **the dimension scores must sum to the total**.
 
-用户消息里注入：评分标准（维度 + 满分 + 评分要点）、等级划分（名称 + 区间 + 描述）、
-**已确认的学生笔误清单**（直接作为语言维度扣分依据）、作文正文。
+The user message injects: the rubric (dimensions + maximum + scoring criteria), the level bands (name + range + description),
+**the confirmed list of student slips** (used directly as grounds for deducting language points), and the essay body.
 
-输出：
+Output:
 
 ```json
 {
   "total": 36,
-  "level": "三类文",
-  "summary": "中心清楚、首尾呼应，但选材空泛、细节不足。",
-  "dimensions": [{"name": "内容", "score": 13, "max": 20, "comment": "…引用原文…"}],
-  "pros": [{"text": "开篇比喻鲜明", "source": "满山的枫叶就像一团团火焰"}],
-  "cons": [{"text": "三个场景只是并列罗列", "source": "我们在落叶堆里打滚…"}],
-  "suggestions": [{"text": "把排比句改成一件具体的事", "source": "…"}],
+  "level": "Band 3",
+  "summary": "The central idea is clear and the ending echoes the opening, but the material is generic and thin on detail.",
+  "dimensions": [{"name": "Content", "score": 13, "max": 20, "comment": "…quotes the essay…"}],
+  "pros": [{"text": "The opening simile is vivid", "source": "the maple leaves on the hill were like balls of flame"}],
+  "cons": [{"text": "The three scenes are merely listed side by side", "source": "we rolled around in the piles of fallen leaves…"}],
+  "suggestions": [{"text": "Turn the parallel sentences into one concrete event", "source": "…"}],
   "highlights": ["…"]
 }
 ```
 
-`suggestions` 必须“具体到怎么改”，带改写示范而不是方向性口号。
+`suggestions` must be specific about *how* to change it, with a sample rewrite rather than a directional slogan.
 
 ---
 
-## 四、提示词不够用：确定性兜底
+## 4. When prompts are not enough: the deterministic safety net
 
-实测（同一张模拟卷，三处错字）：
+Measured on the same photographed mock exam with three misspellings:
 
-| 做法 | 识别阶段 | 校对阶段 | 结果页「学生笔误」 |
+| Approach | Recognition stage | Review stage | "Student typos" on the result page |
 | --- | --- | --- | --- |
-| 旧版提示词 | 「玩要」→「玩耍」 | 判 `ok` | 0 处 |
-| 加强 few-shot | 仍规范化 | 判 `ocr_fix`，改正文 | 0 处 |
-| few-shot + 四态优先级重写 | 保留「玩要」 | 仍判 `ocr_fix` | 0 处 |
-| 再加代码兜底 | 保留「玩要」 | `author_error` | **2 处** ✅ |
+| Original prompts | `teh` → `the` | Judged `ok` | 0 |
+| Stronger few-shot | Still normalised | Judged `ocr_fix`, body rewritten | 0 |
+| few-shot + four-state priority | `teh` kept | Still `ocr_fix` | 0 |
+| Plus the code safety net | `teh` kept | `author_error` | **2** ✅ |
 
-所以 `desktop/electron/ai.js` 里加了一层确定性规则，不依赖模型自觉：
+So `desktop/electron/ai.js` adds a deterministic rule that does not depend on the model behaving itself:
 
 ```js
-// 同长度、仅 1–2 处差异、两侧都是汉字 → 只可能是单字替换，分不清“写错”还是“认错”
+// Same length, only 1–2 differences, Han characters on both sides → a single-character substitution at most,
+// so "the student wrote it wrong" and "it was read wrong" cannot be told apart
 if (verdict === 'ocr_fix' && fixedText && onlyHanSubstitutions(s.text, fixedText)) {
-  verdict = 'author_error';   // 交给老师判断，正文保留原文
+  verdict = 'author_error';   // leave it to the teacher; keep the source text
 }
 ```
 
-`onlyHanSubstitutions(a, b)` 的实现约束：长度必须相同、差异处数 1–2、所有差异位两侧字符都在 `[\u4e00-\u9fa5]`。
-任一不满足就返回 false（多字增删、英文数字变动仍按 `ocr_fix` 处理）。
+Implementation constraints for `onlyHanSubstitutions(a, b)`: the lengths must match, the number of differing positions must be 1–2, and every differing character on both sides must fall inside `[\u4e00-\u9fa5]`.
+If any condition fails it returns false (multi-character insertions or deletions, and changes to Latin letters or digits, are still handled as `ocr_fix`).
 
-**结论：提示词负责“大部分”，代码负责“兜底”。** 把产品正确性寄托在提示词上，等价于把正确性寄托在模型的随机性上。
+**Conclusion: prompts handle "most of it", code handles the "safety net".** Betting product correctness on prompts is equivalent to betting it on the model's randomness.
 
 ---
 
-## 五、成本与耗时
+## 5. Cost and timing
 
-| 阶段 | 输出上限 | 单次耗时（免费通道） | prompt tokens |
+| Stage | Output limit | Time per call (free tier) | prompt tokens |
 | --- | --- | --- | --- |
-| 识别 | 6000 | 7.6–12.1s | ~9.5k |
-| 校对 | 8000 | 4.4–7.8s | ~9k |
-| 批阅 | 6000 | 16–39s | ~9k |
+| Recognition | 6000 | 7.6–12.1s | ~9.5k |
+| Review | 8000 | 4.4–7.8s | ~9k |
+| Grading | 6000 | 16–39s | ~9k |
 
-`prompt_tokens` 里约 8k 是 `opencode` 自身注入的系统提示（`OMIT_SYSTEM_PROMPT` 只去掉客户端 system，去不掉它），
-在免费额度下可以接受，但意味着**每篇作文的固定开销约 25k prompt tokens**，这也是「同时批改篇数」建议保持 1 的原因之一。
+About 8k of `prompt_tokens` is the system prompt that `opencode` injects itself (`OMIT_SYSTEM_PROMPT` only removes the client-side system message, not that one),
+which is acceptable on the free tier — but it means **a fixed overhead of roughly 25k prompt tokens per essay**, and that is one reason to keep "essays graded at once" at 1.
 
-温度固定 0.2，`response_format: json_object`；解析层 `extractJson()` 会去掉 ```json 围栏、修尾随逗号，
-仍解析不出来就按失败处理，交给 `withFallback()` 换备用模型重跑。
+Temperature is fixed at 0.2 with `response_format: json_object`; the parsing layer `extractJson()` strips ```json fences and repairs trailing commas,
+and anything still unparseable counts as a failure and is retried on the backup model through `withFallback()`.
