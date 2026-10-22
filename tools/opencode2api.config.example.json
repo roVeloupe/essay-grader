@@ -1,0 +1,17 @@
+{
+  "_comment": "opencode2api 配置样例，复制到 opencode2api/config.json。这些字段在 2.5.0 上实测可用。",
+
+  "PORT": 10000,
+  "BIND_HOST": "127.0.0.1",
+
+  "MANAGE_BACKEND": true,
+  "OPENCODE_PATH": "",
+  "OPENCODE_SERVER_URL": "http://127.0.0.1:10001",
+
+  "USE_ISOLATED_HOME": false,
+  "DISABLE_TOOLS": true,
+  "OMIT_SYSTEM_PROMPT": true,
+  "WEB_PANEL_ENABLED": false,
+
+  "REQUEST_TIMEOUT_MS": 300000
+}

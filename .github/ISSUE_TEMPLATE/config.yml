@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 使用说明与排错
+    url: https://github.com/roVeloupe/essay-grader/blob/main/docs/TROUBLESHOOTING.md
+    about: 先看这里：引擎启动、免费限流、识别不准、导出格式等问题都有现成解法
+  - name: 旧版（.NET 8）问题
+    url: https://github.com/roVeloupe/essay-grader/tree/main/src
+    about: v1 已停止维护，仅作历史参考

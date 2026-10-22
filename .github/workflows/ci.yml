@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['desktop/**', '.github/workflows/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    name: 语法与配置检查
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 主进程语法检查
+        shell: pwsh
+        run: |
+          $fail = 0
+          Get-ChildItem desktop/electron -Filter *.js -Recurse | ForEach-Object {
+            node --check $_.FullName
+            if ($LASTEXITCODE -ne 0) { Write-Host "FAIL $($_.Name)"; $fail = 1 }
+          }
+          if ($fail -eq 1) { exit 1 }
+
+      - name: 渲染层语法检查（ESM）
+        shell: pwsh
+        run: |
+          $fail = 0
+          $tmp = Join-Path $env:RUNNER_TEMP 'esm-check'
+          New-Item -ItemType Directory -Force -Path $tmp | Out-Null
+          Get-ChildItem desktop/renderer -Filter *.js -Recurse | ForEach-Object {
+            $copy = Join-Path $tmp ($_.BaseName + '.mjs')
+            Copy-Item $_.FullName $copy -Force
+            node --check $copy
+            if ($LASTEXITCODE -ne 0) { Write-Host "FAIL $($_.Name)"; $fail = 1 }
+          }
+          if ($fail -eq 1) { exit 1 }
+
+      - name: package.json 可解析且字段齐全
+        shell: pwsh
+        run: |
+          $p = Get-Content desktop/package.json -Raw | ConvertFrom-Json
+          foreach ($k in 'name','version','main','build') {
+            if (-not $p.$k) { Write-Host "missing $k"; exit 1 }
+          }
+          if (-not $p.build.extraResources) { Write-Host 'missing extraResources'; exit 1 }
+          Write-Host "ok $($p.name)@$($p.version)"
+
+      - name: 提示词关键约束未被删掉（防止回退）
+        shell: pwsh
+        run: |
+          $src = Get-Content desktop/electron/prompts.js -Raw
+          foreach ($needle in 'author_error','ocr_fix','verify','□') {
+            if ($src -notmatch [regex]::Escape($needle)) { Write-Host "prompts.js 缺少 $needle"; exit 1 }
+          }
+          $ai = Get-Content desktop/electron/ai.js -Raw
+          if ($ai -notmatch 'onlyHanSubstitutions') {
+            Write-Host 'ai.js 缺少 onlyHanSubstitutions 兜底'; exit 1
+          }
+          Write-Host 'prompt guards ok'
