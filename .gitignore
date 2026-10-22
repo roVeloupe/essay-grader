@@ -1,27 +1,28 @@
-# ---------- .NET 构建产物 ----------
+# 依赖与产物
+node_modules/
+desktop/node_modules/
+desktop/dist/
+desktop/app/          # 旧路径残留
+
+# 引擎二进制（180 MB，不入库；见 tools/setup-backend.ps1）
 bin/
-obj/
-*.user
-.vs/
-*.pdb
-
-# ---------- 运行期数据（含用户作文图片、数据库，可能含个人隐私） ----------
-data/
-*.db
-*.db-wal
-*.db-shm
-smoke_out/
-
-# ---------- 测试/临时素材（含真实学生作文与教学素材，不公开） ----------
-_test/
-
-# ---------- smoke 工程构建目录 ----------
-smoke/
-
-# ---------- 发布的可执行文件（通过 GitHub Release 上传，不入库） ----------
+opencode2api/
 *.exe
+!desktop/build/*.exe
 
-# ---------- 本地环境/密钥 ----------
-.env
-.env.*
-*.local
+# 构建缓存
+*.log
+*.tmp
+.cache/
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 本地数据
+*.blend1
+samples/
+*.tar.gz

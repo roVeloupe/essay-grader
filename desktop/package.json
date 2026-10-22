@@ -1,0 +1,65 @@
+{
+  "name": "essay-grader",
+  "version": "2.0.0",
+  "private": true,
+  "description": "语文作文智能批改（桌面版）",
+  "author": "essay-grader",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "docx": "^9.5.1"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.essaygrader.desktop",
+    "productName": "语文作文批改助手",
+    "copyright": "免费使用 · 基于 OpenCode Zen 免费模型",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "renderer/**/*",
+      "package.json",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,readme.md,test,__tests__}/**"
+    ],
+    "afterPack": "build/afterPack.cjs",
+    "extraResources": [
+      {
+        "from": "../bin/opencode.exe",
+        "to": "bin/opencode.exe"
+      }
+    ],
+    "compression": "normal",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "语文作文批改助手-${version}-安装包.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "语文作文批改助手",
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}
